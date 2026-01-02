@@ -1,7 +1,7 @@
 "use client"
 
 import React from 'react';
-import { Home, Search, Settings, LogOut, Users, MessageCircle, User } from 'lucide-react';
+import { Home, Search, Settings, LogOut, Users, MessageCircle, User, CirclePlus } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -29,6 +29,7 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { SignedIn, useUser, useClerk, UserButton } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
+import ThemedButton from '@/components/shared/ThemedButton';
 
 const menuItems = [
     { icon: Home, label: 'Feed', url: '/feeds' },
@@ -93,6 +94,14 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                                             </SidebarMenuButton>
                                         </SidebarMenuItem>
                                     ))}
+                                    <SidebarMenuItem>
+                                        <ThemedButton asChild>
+                                            <Link href={'/posts/create'} className='mt-6'>
+                                                <CirclePlus className='w-5 h-5' />
+                                                Create Post
+                                            </Link>
+                                        </ThemedButton>
+                                    </SidebarMenuItem>
                                 </SidebarMenu>
                             </SidebarGroupContent>
                         </SidebarGroup>
