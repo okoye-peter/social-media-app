@@ -1,9 +1,14 @@
+import UserProfile from '@/components/shared/UserProfile';
+import { dummyUserData } from '@/public/deleteLater/assets'
 import React from 'react'
 
-const Profile = () => {
+const LoggedInUserProfile = () => {
+    const user =  dummyUserData;
   return (
-    <div>Profile</div>
+    <div>
+        <UserProfile user={user} />
+    </div>
   )
 }
 
-export default Profile
+export default LoggedInUserProfile

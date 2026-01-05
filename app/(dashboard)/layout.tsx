@@ -48,7 +48,6 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
     const { user } = useUser()
     const { signOut } = useClerk();
-    console.log('DashboardLayout', user)
 
     const isActive = (url: string) => pathname === url;
 
@@ -66,6 +65,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                                 width={40}
                                 height={40}
                                 className="rounded"
+                                style={{ width: 'auto', height: 'auto' }}
                             />
                             <h1 className="text-lg font-semibold">Konnect</h1>
                         </div>
@@ -84,7 +84,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                                                     className={cn(
                                                         "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200",
                                                         isActive(item.url)
-                                                            ? "bg-[linear-gradient(90deg,#615FFF_0%,#9810FA_100%)] text-white font-medium shadow-md hover:bg-[linear-gradient(90deg,#3A38A3_0%,#4D0889_100%)] hover:text-white"
+                                                            ? "bg-indigo-50 text-indigo-700 font-medium  shadow-sm hover:bg-indigo-100"
                                                             : "text-gray-700 hover:bg-gray-200"
                                                     )}
                                                 >

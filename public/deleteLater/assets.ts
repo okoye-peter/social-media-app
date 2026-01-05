@@ -5,6 +5,9 @@ import bgImage from './bgImage.png'
 import group_users from './group_users.png'
 import { Home, MessageCircle, Search, UserIcon, Users } from 'lucide-react'
 import sponsored_img from './sponsored_img.png'
+import { User } from '@/types/story'
+import { Post } from '@/types/post'
+import { Message, MessageWithUserIds } from '@/types/message'
 
 export const assets = {
     logo,
@@ -23,7 +26,7 @@ export const menuItemsData = [
     { to: '/profile', label: 'Profile', Icon: UserIcon },
 ];
 
-export const dummyUserData = {
+export const dummyUserData: User = {
     "_id": "user_2zdFoZib5lNr614LgkONdD8WG32",
     "email": "admin@example.com",
     "full_name": "John Warren",
@@ -121,7 +124,7 @@ export const dummyStoriesData = [
 ]
 
 
-export const dummyPostsData = [
+export const dummyPostsData: Post[] = [
     {
         "_id": "68773e977db16954a783839c",
         "user": dummyUserData,
@@ -129,7 +132,7 @@ export const dummyPostsData = [
         "image_urls": [
             "https://images.pexels.com/photos/1595385/pexels-photo-1595385.jpeg"
         ],
-        "post_type": "text_with_image",
+        "post_type": "text_with_image" as const,
         "likes_count": [],
         "createdAt": "2025-07-16T05:54:31.191Z",
         "updatedAt": "2025-07-16T05:54:31.191Z",
@@ -139,7 +142,7 @@ export const dummyPostsData = [
         "user": dummyUserData,
         "content": "Unlock your potential—every small step counts. Stay consistent, stay focused, and trust the process. Growth takes time, but every day is a new chance to be better than yesterday. 🌱✨\r\n\r\n#Motivation #GrowthMindset #DailyInspiration #StayFocused #LevelUp #PositiveVibes #KeepGoing #SelfImprovement #MindsetMatters #SuccessJourney",
         "image_urls": [],
-        "post_type": "text",
+        "post_type": "text" as const,
         "likes_count": [],
         "createdAt": "2025-07-09T13:22:12.601Z",
         "updatedAt": "2025-07-09T13:22:12.601Z",
@@ -149,7 +152,7 @@ export const dummyPostsData = [
         "user": dummyUserData,
         "content": "This is a sample paragraph with some #hashtags like #socialmedia and #marketing. Let's find them!",
         "image_urls": [],
-        "post_type": "text",
+        "post_type": "text" as const,
         "likes_count": [],
         "createdAt": "2025-07-09T13:14:09.144Z",
         "updatedAt": "2025-07-09T13:14:09.144Z",
@@ -161,7 +164,7 @@ export const dummyPostsData = [
         "image_urls": [
             "https://images.pexels.com/photos/1619317/pexels-photo-1619317.jpeg"
         ],
-        "post_type": "image",
+        "post_type": "image" as const,
         "likes_count": [
             "user_2zdJbcAqiOX9jq2DIueBRQn0lMt"
         ],
@@ -192,13 +195,13 @@ export const dummyPostsData = [
     }
 ]
 
-export const dummyRecentMessagesData = [
+export const dummyRecentMessagesData: Message[] = [
     {
         "_id": "68833af618623d2de81b5381",
         "from_user_id": dummyUser2Data,
         "to_user_id": dummyUserData,
         "text": "I seen your profile",
-        "message_type": "text",
+        "message_type": "text" as const,
         "media_url": "",
         "seen": true,
         "createdAt": "2025-07-25T08:06:14.436Z",
@@ -228,13 +231,13 @@ export const dummyRecentMessagesData = [
     }
 ]
 
-export const dummyMessagesData = [
+export const dummyMessagesData: MessageWithUserIds[] = [
     {
         "_id": "6878cc3217a54e4d37480122",
         "from_user_id": "user_2zwZSCMRXQ9GaEEVLgm6akQo96i",
         "to_user_id": "user_2zdFoZib5lNr614LgkONdD8WG32",
         "text": "",
-        "message_type": "image",
+        "message_type": "image" as const,
         "media_url": "https://images.pexels.com/photos/106341/pexels-photo-106341.jpeg",
         "createdAt": "2025-07-17T10:10:58.524Z",
         "updatedAt": "2025-07-25T10:43:50.346Z",
@@ -262,7 +265,7 @@ export const dummyMessagesData = [
         "createdAt": "2025-07-25T10:44:12.753Z",
         "updatedAt": "2025-07-25T10:44:12.753Z",
     },
-        {
+    {
         "_id": "6878cc2817a54e4d3748010c",
         "from_user_id": "user_2zdFoZib5lNr614LgkONdD8WG32",
         "to_user_id": "user_2zwZSCMRXQ9GaEEVLgm6akQo96i",
