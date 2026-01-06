@@ -31,16 +31,16 @@ const LoginComponent = ({ onChangeCard }: { onChangeCard: (card: string) => void
 
         try {
             setLoading(true)
-            console.log('Sending login request with:', { email: email.substring(0, 3) + '***', password: '***' })
+            // console.log('Sending login request with:', { email: email.substring(0, 3) + '***', password: '***' })
             const res = await axiosInstance.post('/auth/login', { email, password })
-            console.log('Login response:', res.data)
+            // console.log('Login response:', res.data)
             setUser(res.data.user) // Save user to store
             toast.success('Login successful')
             router.replace('/feeds')
         } catch (error) {
-            console.error('Login error:', error)
+            // console.error('Login error:', error)
             if (error instanceof AxiosError) {
-                console.error('Error response:', error.response?.data)
+                // console.error('Error response:', error.response?.data)
                 toast.error(error.response?.data?.error || 'Invalid email or password')
             } else {
                 toast.error('An unexpected error occurred')

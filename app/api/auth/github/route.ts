@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
-    const searchParams = request.nextUrl.searchParams;
-    const redirectTo = process.env.GITHUB_REDIRECT_URI || '/dashboard';
+    const redirectTo = '/feeds';
 
     const githubAuthUrl = new URL('https://github.com/login/oauth/authorize');
     githubAuthUrl.searchParams.set('client_id', process.env.GITHUB_CLIENT_ID!);
