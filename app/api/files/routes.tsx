@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Upload the file directly (it's already a File object from formData)
-        const result = await uploadFile(file, 'uploads');
+        const result = await uploadFile(file, { folder: 'uploads' });
 
         return NextResponse.json({
             success: true,
