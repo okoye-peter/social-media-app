@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Outfit, UnifrakturMaguntia } from "next/font/google";
 import "./globals.css";
-import { ClerkProvider } from '@clerk/nextjs'
+// import { ClerkProvider } from '@clerk/nextjs'
 import { Toaster } from "@/components/ui/sonner"
 
 const outfit = Outfit({
@@ -28,27 +28,14 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <ClerkProvider>
 
-            <html lang="en">
-                <body
-                    className={`${outfit.className} ${gothicFont.variable} antialiased min-h-screen`}
-                >
-                    {/* <SignedOut>
-                        <SignInButton />
-                        <SignUpButton>
-                            <button className="bg-[#6c47ff] text-ceramic-white rounded-full font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 cursor-pointer">
-                                Sign Up
-                            </button>
-                        </SignUpButton>
-                    </SignedOut>
-                    <SignedIn>
-                        <UserButton />
-                    </SignedIn> */}
-                    {children}
-                    <Toaster />
-                </body>
-            </html>
-        </ClerkProvider>
+        <html lang="en">
+            <body
+                className={`${outfit.className} ${gothicFont.variable} antialiased min-h-screen`}
+            >
+                {children}
+                <Toaster position="top-right" />
+            </body>
+        </html>
     );
 }
