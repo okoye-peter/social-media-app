@@ -10,7 +10,7 @@ import { uploadFile, deleteFile, deleteMultipleFiles } from './supabase-s3.servi
  */
 export async function uploadProfilePicture(file: File) {
     try {
-        const result = await uploadFile(file, 'avatars');
+        const result = await uploadFile(file, { folder: 'avatars' });
 
         return {
             success: true,
@@ -34,7 +34,7 @@ export async function uploadProfilePicture(file: File) {
  */
 export async function uploadPostImages(files: File[]) {
     try {
-        const uploadPromises = files.map(file => uploadFile(file, 'posts'));
+        const uploadPromises = files.map(file => uploadFile(file, { folder: 'posts' }));
         const results = await Promise.all(uploadPromises);
 
         return {
@@ -59,7 +59,7 @@ export async function uploadPostImages(files: File[]) {
  */
 export async function uploadMessageMedia(file: File) {
     try {
-        const result = await uploadFile(file, 'messages');
+        const result = await uploadFile(file, { folder: 'messages' });
 
         return {
             success: true,
@@ -109,7 +109,7 @@ export async function updateProfilePicture(
         }
 
         // Upload new picture
-        const result = await uploadFile(newFile, 'avatars');
+        const result = await uploadFile(newFile, { folder: 'avatars' });
 
         return {
             success: true,
