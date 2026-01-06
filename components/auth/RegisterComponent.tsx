@@ -1,23 +1,54 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ChevronRight, Upload } from 'lucide-react'
 import { toast } from 'sonner'
+import { deleteFile, uploadFile } from '@/lib/supabase-s3.service'
+import axiosInstance from '@/lib/axios'
+import { useRouter } from 'next/navigation'
+import { useUserStore } from '@/stores'
 
 const RegisterComponent = ({ onChangeCard }: { onChangeCard: (card: string) => void }) => {
+
+    const router = useRouter()
+
     const [formData, setFormData] = useState({
         name: '',
         email: '',
         password: '',
-        password_confirmation: ''
+        password_confirmation: '',
+        image: ''
     })
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [profilePicture, setProfilePicture] = useState<File | null>(null)
     const [previewUrl, setPreviewUrl] = useState<string>('')
     const [loading, setLoading] = useState(false)
+    const [profilePictureUrl, setProfilePictureUrl] = useState<string>('')
+
+    // Upload state management
+    const [uploadProgress, setUploadProgress] = useState<number>(0)
+    const [isUploading, setIsUploading] = useState(false)
+    const [uploadAbortController, setUploadAbortController] = useState<AbortController | null>(null)
+
+    // Track registration completion to prevent cleanup on successful registration
+    const registrationCompletedRef = useRef(false)
+
+    // Cleanup effect: delete uploaded image if component unmounts without completing registration
+    useEffect(() => {
+        return () => {
+            // Only cleanup if registration wasn't completed and there's an uploaded file
+            if (!registrationCompletedRef.current && profilePictureUrl) {
+                // Delete the uploaded file asynchronously
+                deleteFile(profilePictureUrl).catch((error) => {
+                    console.error('Failed to cleanup uploaded file:', error)
+                })
+            }
+        }
+    }, [profilePictureUrl])
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({
@@ -26,8 +57,24 @@ const RegisterComponent = ({ onChangeCard }: { onChangeCard: (card: string) => v
         })
     }
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
+
+        // Cancel any ongoing upload
+        if (uploadAbortController) {
+            uploadAbortController.abort()
+            setUploadAbortController(null)
+        }
+
+        // Delete previous file if exists
+        if (profilePictureUrl) {
+            try {
+                await deleteProfilePicture()
+            } catch (error) {
+                console.error('Error deleting previous file:', error)
+            }
+        }
+
         if (file) {
             setProfilePicture(file)
             const reader = new FileReader()
@@ -35,11 +82,78 @@ const RegisterComponent = ({ onChangeCard }: { onChangeCard: (card: string) => v
                 setPreviewUrl(reader.result as string)
             }
             reader.readAsDataURL(file)
+
+            // Upload the file
+            uploadProfilePicture(file)
+        }
+    }
+
+    const uploadProfilePicture = async (file: File): Promise<string> => {
+        // Create new abort controller
+        const abortController = new AbortController()
+        setUploadAbortController(abortController)
+        setIsUploading(true)
+        setUploadProgress(0)
+
+        try {
+            const result = await uploadFile(file, {
+                folder: 'uploads',
+                onProgress: (progress) => {
+                    setUploadProgress(progress)
+                },
+                signal: abortController.signal
+            })
+
+            setProfilePictureUrl(result.url)
+            setIsUploading(false)
+            setUploadProgress(100)
+            toast.success('Profile picture uploaded successfully!')
+            return result.url
+        } catch (error) {
+            setIsUploading(false)
+            setUploadProgress(0)
+            setUploadAbortController(null)
+
+            if ((error as Error).message === 'Upload cancelled') {
+                toast.info('Upload cancelled')
+            } else {
+                toast.error('Failed to upload profile picture')
+                console.error('Upload error:', error)
+            }
+            throw error
+        }
+    }
+
+    const deleteProfilePicture = async (): Promise<void> => {
+        if (!profilePictureUrl) {
+            return
+        }
+
+        try {
+            await deleteFile(profilePictureUrl)
+            setProfilePictureUrl('')
+            setPreviewUrl('')
+            setProfilePicture(null)
+            setUploadProgress(0)
+        } catch (error) {
+            console.error('Delete error:', error)
+            throw error
         }
     }
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault()
+
+        // Prevent submission if upload is in progress
+        if (isUploading) {
+            toast.error('Please wait for the profile picture upload to complete')
+            return
+        }
+
+        if (!formData.name || !formData.email || !formData.password || !formData.password_confirmation) {
+            toast.error('All fields are required!')
+            return
+        }
 
         if (formData.password !== formData.password_confirmation) {
             toast.error('Passwords do not match!')
@@ -47,9 +161,28 @@ const RegisterComponent = ({ onChangeCard }: { onChangeCard: (card: string) => v
         }
 
         setLoading(true)
+
+        try {
+            const {data} = await axiosInstance.post('/auth/register', {
+                name: formData.name,
+                email: formData.email,
+                password: formData.password,
+                image: profilePictureUrl
+            })
+            
+            useUserStore.setState({user: data.user})
+            
+            // Mark registration as completed to prevent cleanup
+            registrationCompletedRef.current = true
+
+            router.replace('/feeds');
+        } catch (error) {
+            toast.error('Registration failed!')
+        } finally {
+            setLoading(false)
+        }
         // TODO: Implement registration logic
         // console.log('Register with:', formData, profilePicture)
-        setLoading(false)
     }
 
     const handleGoogleRegister = () => {
@@ -123,11 +256,16 @@ const RegisterComponent = ({ onChangeCard }: { onChangeCard: (card: string) => v
                             Profile Picture (Optional)
                         </Label>
                         <div className="flex items-center gap-3">
-                            <div className="w-16 h-16 rounded-full bg-gray-100 border-2 border-gray-300 flex items-center justify-center overflow-hidden">
+                            <div className="w-16 h-16 rounded-full bg-gray-100 border-2 border-gray-300 flex items-center justify-center overflow-hidden relative">
                                 {previewUrl ? (
                                     <Image src={previewUrl} alt="Preview" width={64} height={64} className="w-full h-full object-cover" />
                                 ) : (
                                     <Upload className="w-6 h-6 text-gray-400" />
+                                )}
+                                {isUploading && (
+                                    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                                        <div className="text-white text-xs font-bold">{Math.round(uploadProgress)}%</div>
+                                    </div>
                                 )}
                             </div>
                             <div className="flex-1">
@@ -137,15 +275,33 @@ const RegisterComponent = ({ onChangeCard }: { onChangeCard: (card: string) => v
                                     onChange={handleFileChange}
                                     className="hidden"
                                     id="picture"
+                                    disabled={isUploading}
                                 />
                                 <Label
                                     htmlFor="picture"
-                                    className="cursor-pointer inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-lg text-xs font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                                    className={`cursor-pointer inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-lg text-xs font-medium bg-white transition-colors ${isUploading
+                                        ? 'text-gray-400 cursor-not-allowed'
+                                        : 'text-gray-700 hover:bg-gray-50'
+                                        }`}
                                 >
-                                    Choose File
+                                    {isUploading ? 'Uploading...' : 'Choose File'}
                                 </Label>
                             </div>
                         </div>
+                        {/* Progress Bar */}
+                        {isUploading && (
+                            <div className="mt-2">
+                                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                                    <div
+                                        className="bg-linear-to-r from-indigo-600 to-purple-600 h-full transition-all duration-300 ease-out"
+                                        style={{ width: `${uploadProgress}%` }}
+                                    />
+                                </div>
+                                <p className="text-xs text-gray-500 mt-1">
+                                    Uploading... {Math.round(uploadProgress)}%
+                                </p>
+                            </div>
+                        )}
                     </div>
 
                     {/* Name */}
@@ -218,11 +374,11 @@ const RegisterComponent = ({ onChangeCard }: { onChangeCard: (card: string) => v
 
                     <Button
                         type="submit"
-                        disabled={loading}
-                        className="w-full h-10 bg-linear-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold text-sm rounded-lg shadow-lg hover:shadow-xl transition-all mt-2"
+                        disabled={loading || isUploading}
+                        className="w-full h-10 bg-linear-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold text-sm rounded-lg shadow-lg hover:shadow-xl transition-all mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        {loading ? 'Creating account...' : 'Create Account'}
-                        {!loading && <ChevronRight className="ml-2 w-5 h-5" />}
+                        {isUploading ? 'Uploading picture...' : loading ? 'Creating account...' : 'Create Account'}
+                        {!loading && !isUploading && <ChevronRight className="ml-2 w-5 h-5" />}
                     </Button>
                 </form>
 
