@@ -70,7 +70,7 @@ const EditUserProfileModal = ({ open, onOpenChange }: EditUserProfileModalProps)
 
     const handleSave = () => {
         // TODO: Implement save logic here
-        console.log('Saving profile:', editForm)
+        // console.log('Saving profile:', editForm)
         onOpenChange(false)
     }
 

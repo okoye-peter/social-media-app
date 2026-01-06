@@ -6,14 +6,14 @@ import { findUserByEmail } from '@/lib/db';
 export async function POST(request: NextRequest) {
     try {
         // Log request details
-        console.log('=== Login Request Debug ===');
-        console.log('Headers:', Object.fromEntries(request.headers.entries()));
+        // console.log('=== Login Request Debug ===');
+        // console.log('Headers:', Object.fromEntries(request.headers.entries()));
 
         // Get raw body text first
         const bodyText = await request.text();
-        console.log('Raw body text:', bodyText);
-        console.log('Body length:', bodyText.length);
-        console.log('First 100 chars:', bodyText.substring(0, 100));
+        // console.log('Raw body text:', bodyText);
+        // console.log('Body length:', bodyText.length);
+        // console.log('First 100 chars:', bodyText.substring(0, 100));
 
         // Parse and validate request body
         let body;

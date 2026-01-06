@@ -48,7 +48,7 @@ const RegisterComponent = ({ onChangeCard }: { onChangeCard: (card: string) => v
 
         setLoading(true)
         // TODO: Implement registration logic
-        console.log('Register with:', formData, profilePicture)
+        // console.log('Register with:', formData, profilePicture)
         setLoading(false)
     }
 

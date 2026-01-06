@@ -8,7 +8,7 @@ import Link from 'next/link'
 import { Eye, MessageSquare } from 'lucide-react'
 
 const MessageUserCard = ({ user }: { user: User }) => {
-    console.log(user)
+    // console.log(user)
     return (
         <Card className='mb-6'>
             <CardContent>

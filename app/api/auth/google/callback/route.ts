@@ -37,7 +37,6 @@ export async function GET(request: NextRequest) {
         );
 
         const googleUser = await userInfoResponse.json();
-        console.log('googleUser', googleUser)
 
 
         // Check if user exists with same email
