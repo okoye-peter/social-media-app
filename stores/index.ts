@@ -1,4 +1,4 @@
-import { User } from '@/app/generated/prisma/client'
+import { User } from '@prisma/client'
 import { create } from 'zustand'
 
 interface UserStore {
