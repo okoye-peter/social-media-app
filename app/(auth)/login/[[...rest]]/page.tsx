@@ -1,25 +1,67 @@
 "use client"
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { Star } from 'lucide-react'
-import { SignIn, useUser } from '@clerk/nextjs'
-import { useRouter } from 'next/navigation'
+// import { SignIn, useUser } from '@clerk/nextjs'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Skeleton } from '@/components/ui/skeleton'
+import LoginComponent from '@/components/auth/LoginComponent'
+import RegisterComponent from '@/components/auth/RegisterComponent'
+import { useUserStore } from '@/stores'
+import axiosInstance from '@/lib/axios'
+import { toast } from "sonner"
 
 const Login = () => {
-    const { user, isLoaded } = useUser()
+    const searchParams = useSearchParams();
+
+    const user = useUserStore((state) => state.user)
+    const [loading, setLoading] = useState(false)
+    const setUser = useUserStore((state) => state.setUser)
+
     const router = useRouter()
 
+    const [card, setCard] = useState('login')
+
+    // Check for existing session on mount
     useEffect(() => {
-        // If user is authenticated, redirect to /feeds
-        if (isLoaded && user) {
-            router.replace('/feeds')
+        const checkSession = async () => {
+            try {
+                setLoading(true)
+                const res = await axiosInstance.get('/auth/me')
+                setUser(res.data.user) // Extract user from response
+                router.replace('/feeds')
+            } catch (err: unknown) {
+                if (err && typeof err === 'object' && 'response' in err) {
+                    const axiosError = err as { response?: { status: number } }
+                    if (axiosError.response?.status === 401) {
+                        setUser(null)
+                    }
+                }
+            } finally {
+                setLoading(false)
+            }
         }
-    }, [user, isLoaded, router])
+
+        // Only check if we don't already have a user
+        if (!user) {
+            checkSession()
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []) // Run only once on mount
+
+    // Handle authentication errors from OAuth redirects
+    useEffect(() => {
+        const error = searchParams.get('error')
+        
+        if (error == 'no_code' || error == 'oauth_failed') {
+            toast.error('Authentication failed!')
+        }
+    }, [searchParams])
+
 
     // Show loading skeleton while checking authentication status
-    if (!isLoaded) { 
+    if (loading) {
         return (
             <div className='h-screen lg:px-20 md:px-16 px-4 py-8 bg-[url("/bgImage.png")] bg-cover bg-center bg-no-repeat'>
                 <header className='flex items-center justify-center gap-4 flex-col h-1/4'>
@@ -77,7 +119,8 @@ const Login = () => {
                     <p className='text-[rgba(28,57,142,1)] font-normal text-3xl'>connect with global community on pingup.</p>
                 </div>
                 <div className='justify-items-center'>
-                    <SignIn forceRedirectUrl="/feeds" />
+                    {card === 'login' ? <LoginComponent onChangeCard={setCard} /> : <RegisterComponent onChangeCard={setCard} />}
+                    {/* <SignIn forceRedirectUrl="/feeds" /> */}
                 </div>
             </div>
         </div>
