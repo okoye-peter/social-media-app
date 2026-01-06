@@ -40,7 +40,7 @@ import { uploadFile } from '@/lib/supabase-s3.service';
 // Client-side upload (e.g., in a component)
 async function handleFileUpload(file: File) {
   try {
-    const result = await uploadFile(file, 'avatars');
+    const result = await uploadFile(file, { folder: 'avatars' });
     
     console.log('Upload successful!');
     console.log('URL:', result.url);        // Public URL
@@ -62,7 +62,7 @@ async function handleFileUpload(file: File) {
 
 ```typescript
 // Upload with 5 retry attempts instead of default 3
-const result = await uploadFile(file, 'posts', 5);
+const result = await uploadFile(file, { folder: 'posts', maxRetries: 5 });
 ```
 
 ### Delete a File
@@ -123,7 +123,7 @@ export function ProfilePictureUpload() {
 
     try {
       setUploading(true);
-      const result = await uploadFile(file, 'avatars');
+      const result = await uploadFile(file, { folder: 'avatars' });
       
       setImageUrl(result.url);
       setImagePath(result.path);
@@ -176,7 +176,7 @@ export function ProfilePictureUpload() {
 ```typescript
 async function uploadPostImages(files: File[]) {
   const uploadPromises = files.map(file => 
-    uploadFile(file, 'posts')
+    uploadFile(file, { folder: 'posts' })
   );
   
   const results = await Promise.all(uploadPromises);
@@ -193,10 +193,10 @@ async function uploadPostImages(files: File[]) {
 
 The service automatically organizes files using the `folder` parameter:
 
-- **Avatars**: `uploadFile(file, 'avatars')`
-- **Posts**: `uploadFile(file, 'posts')`
-- **Messages**: `uploadFile(file, 'messages')`
-- **Stories**: `uploadFile(file, 'stories')`
+- **Avatars**: `uploadFile(file, { folder: 'avatars' })`
+- **Posts**: `uploadFile(file, { folder: 'posts' })`
+- **Messages**: `uploadFile(file, { folder: 'messages' })`
+- **Stories**: `uploadFile(file, { folder: 'stories' })`
 
 Each file gets a unique name with timestamp and random string to prevent conflicts.
 
@@ -212,14 +212,17 @@ If all attempts fail, an error is thrown with details.
 
 ## API Reference
 
-### `uploadFile(file, folder?, maxRetries?)`
+### `uploadFile(file, options?)`
 
-Uploads a file to Supabase Storage with retry logic.
+Uploads a file to Supabase Storage with retry logic, progress tracking, and cancellation support.
 
 **Parameters:**
 - `file` (File): File to upload
-- `folder` (string, optional): Folder path in storage
-- `maxRetries` (number, optional): Maximum retry attempts (default: 3)
+- `options` (UploadOptions, optional): Upload configuration
+  - `folder` (string, optional): Folder path in storage
+  - `maxRetries` (number, optional): Maximum retry attempts (default: 3)
+  - `onProgress` ((progress: number) => void, optional): Progress callback (0-100)
+  - `signal` (AbortSignal, optional): Abort signal for cancellation
 
 **Returns:** `Promise<UploadResult>`
 ```typescript
