@@ -1,9 +1,10 @@
-import { NextResponse } from 'next/server';
-import { getCurrentUser } from '@/lib/auth';
+import { NextRequest, NextResponse } from 'next/server';
+import { getUserFromRequest } from '@/lib/auth';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
     try {
-        const user = await getCurrentUser();
+        // Get user from request (middleware provides userId, we fetch full user here)
+        const user = await getUserFromRequest(request);
 
         if (!user) {
             return NextResponse.json(

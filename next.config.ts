@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+    // Make environment variables available in Edge runtime (middleware)
+    env: {
+        JWT_SECRET: process.env.JWT_SECRET,
+    },
     images: {
         remotePatterns: [
             {

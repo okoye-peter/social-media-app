@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Outfit, UnifrakturMaguntia } from "next/font/google";
 import "./globals.css";
-// import { ClerkProvider } from '@clerk/nextjs'
+import QueryProvider from "@/components/providers/QueryProvider";
 import { Toaster } from "@/components/ui/sonner"
 
 const outfit = Outfit({
@@ -33,8 +33,10 @@ export default function RootLayout({
             <body
                 className={`${outfit.className} ${gothicFont.variable} antialiased min-h-screen`}
             >
-                {children}
-                <Toaster position="top-right" />
+                <QueryProvider>
+                    {children}
+                    <Toaster position="top-right" />
+                </QueryProvider>
             </body>
         </html>
     );

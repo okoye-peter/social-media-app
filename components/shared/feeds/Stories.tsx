@@ -1,30 +1,23 @@
 "use client"
 
 import { Skeleton } from '@/components/ui/skeleton'
-import { dummyStoriesData } from '@/public/deleteLater/assets'
-import { useEffect, useState } from 'react'
 import CreateFeed from './CreateFeed'
 import StoryCard from './StoryCard'
-import { Story } from '@/types/story'
+import axiosInstance from '@/lib/axios'
+import { fullStory } from './StoryCard'
+import { useQuery } from '@tanstack/react-query'
 
 
 const Stories = () => {
-    const [stories, setStories] = useState<Story[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-
-    useEffect(() => {
-        const fetchStories = async () => {
-            setIsLoading(true);
-            await new Promise((resolve) => {
-                setTimeout(() => {
-                    setStories(dummyStoriesData as Story[])
-                    resolve(true)
-                }, 2000)
-            })
-            setIsLoading(false);
+    
+    const { data:stories, isLoading, error } = useQuery<fullStory[]>({
+        queryKey: ['stories'],
+        queryFn: async () => {
+            const { data } = await axiosInstance.get('/auth/stories')
+            return data.stories
         }
-        fetchStories()
-    }, [])
+    })
+
 
     return (
         <div className="w-full no-scrollbar overflow-x-auto flex gap-3 mb-6 pb-6">
@@ -40,8 +33,8 @@ const Stories = () => {
                     <Skeleton className='h-[170px] w-[120px]'></Skeleton>
                 </>
             ) : (
-                stories.map((story, index) => (
-                    <StoryCard key={story._id || index} story={story} />
+                stories?.map((story, index) => (
+                    <StoryCard key={story.id || index} story={story} />
                 ))
             )}
         </div>

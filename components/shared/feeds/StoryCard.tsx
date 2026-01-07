@@ -2,16 +2,20 @@
 
 import { Button } from '@/components/ui/button'
 import Image from 'next/image'
-import React, { useState } from 'react'
-import { Story } from '@/types/story'
+import { useState } from 'react'
+
 import moment from 'moment'
 import StoryViewerModal from './StoryViewerModal'
+import { Story, User } from '@/app/generated/prisma/client'
 
-const StoryCard = ({ story }: { story: Story }) => {
+export type fullStory = Story &
+{
+    user: Omit<User, 'password'>
+}
+
+const StoryCard = ({ story }: { story: fullStory }) => {
     // Handle both string URLs and imported image objects
-    const profilePicSrc = typeof story.user.profile_picture === 'string'
-        ? story.user.profile_picture
-        : story.user.profile_picture.src;
+    const profilePicSrc = story.user.image as string;
     const [openViewStoryModal, setOpenViewStoryModal] = useState(false)
 
 
@@ -20,13 +24,13 @@ const StoryCard = ({ story }: { story: Story }) => {
             <Button
                 variant='ghost'
                 className='h-[170px] w-[120px] hover:bg-none px-0 cursor-pointer rounded-2xl relative'
-                style={{ backgroundColor: story.background_color }}
+                style={{ backgroundColor: story.contentBackground as string }}
                 onClick={() => setOpenViewStoryModal(true)}
             >
                 <Image
                     className="absolute size-8 top-3 left-3 z-10 rounded-full ring ring-gray-100 shadow"
                     src={profilePicSrc}
-                    alt={story.user.full_name}
+                    alt={story.user.name}
                     width={32}
                     height={32}
                 />
@@ -37,13 +41,13 @@ const StoryCard = ({ story }: { story: Story }) => {
                     {moment(story.createdAt).fromNow()}
                 </p>
                 {
-                    story.media_type !== 'text' && (
+                    story.contextType !== 'TEXT' && (
                         <div className='absolute inset-0 z-1 rounded-lg bg-black/50 overflow-hidden'>
                             {
-                                story.media_type === 'image' ?
-                                    <Image src={story.media_url} alt={story.user.full_name} width={120} height={170} className='rounded-2xl w-full h-full object-cover hover:scale-110 transition duration-500 opacity-70 hover:opacity-80' />
+                                story.contextType === 'IMAGE' ?
+                                    <Image src={story.mediaUrl as string} alt={story.user.name} width={120} height={170} className='rounded-2xl w-full h-full object-cover hover:scale-110 transition duration-500 opacity-70 hover:opacity-80' />
                                     :
-                                    <video src={story.media_url} className='rounded-2xl w-full h-full object-cover hover:scale-110 transition duration-500 opacity-70 hover:opacity-80' />
+                                    <video src={story.mediaUrl as string} preload="metadata" className='rounded-2xl w-full h-full object-cover hover:scale-110 transition duration-500 opacity-70 hover:opacity-80' />
                             }
                         </div>
                     )

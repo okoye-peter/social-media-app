@@ -29,6 +29,27 @@ export async function uploadProfilePicture(file: File) {
     }
 }
 
+export async function uploadStories(file: File) {
+    try {
+        const result = await uploadFile(file, { folder: 'stories' });
+
+        return {
+            success: true,
+            data: {
+                url: result.url,
+                path: result.path,
+                type: result.type,
+            },
+        };
+    } catch (error) {
+        console.error('Failed to upload stories media:', error);
+        return {
+            success: false,
+            error: (error as Error).message,
+        };
+    }
+}
+
 /**
  * Example 2: Upload post images (multiple files)
  */

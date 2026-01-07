@@ -1,15 +1,15 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getAuthTokenFromRequest } from '@/lib/auth';
-import { verifyToken } from '@/lib/jwt';
+import { verifyTokenEdge } from '@/lib/jwt-edge';
 
 const protectedRoutes = ['/dashboard', '/profile', '/settings'];
 const authRoutes = ['/login', '/register'];
 
-export function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
     const token = getAuthTokenFromRequest(request);
-    const isAuthenticated = token ? !!verifyToken(token) : false;
+    const isAuthenticated = token ? !!(await verifyTokenEdge(token)) : false;
 
     // Redirect authenticated users away from auth pages
     if (isAuthenticated && authRoutes.some(route => pathname.startsWith(route))) {

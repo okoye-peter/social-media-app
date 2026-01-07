@@ -24,6 +24,11 @@ enum MessageContentType {
     VIDEO
 }
 
+enum PostMediaType {
+    IMAGE
+    VIDEO
+}
+
 model User {
     id         Int       @id @default(autoincrement())
     name       String
@@ -97,6 +102,7 @@ model Like {
     postId    Int
     createdAt DateTime @default(now())
 
+    @@unique([userId, postId])
     @@map("likes")
 }
 
@@ -109,6 +115,7 @@ model Connection {
     status     ConnectionStatus @default(PENDING)
     createdAt  DateTime         @default(now())
 
+    @@unique([senderId, receiverId])
     @@map("connections")
 }
 

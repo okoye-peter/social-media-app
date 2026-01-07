@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { hashPassword, setAuthCookie } from '@/lib/auth';
-import { signToken } from '@/lib/jwt';
+import { signTokenEdge } from '@/lib/jwt-edge';
 import { createUser, findUserByEmail } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
@@ -66,8 +66,8 @@ export async function GET(request: NextRequest) {
             });
         }
 
-        // Generate JWT
-        const token = signToken({
+        // Generate JWT using jose (Edge-compatible)
+        const token = await signTokenEdge({
             userId: user.id,
             email: user.email,
         });
