@@ -6,115 +6,304 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Sparkle, TextIcon, UploadIcon } from 'lucide-react';
+import axiosInstance from '@/lib/axios';
+import { useQueryClient } from '@tanstack/react-query';
+import { Loader, Sparkle, TextIcon, UploadIcon, X } from 'lucide-react';
 import Image from 'next/image';
-import React, { useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner';
+
 
 interface CreateStoryModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
+    onStoryCreated?: () => void;
 }
 
-const CreateStoryModal = ({ open, onOpenChange }: CreateStoryModalProps) => {
-    const bgColors = ['#4f46e5', '#7c3aed', '#db2777', '#e11d48', '#ca8a04', '#0d9488'];
+const BG_COLORS = ['#4f46e5', '#7c3aed', '#db2777', '#e11d48', '#ca8a04', '#0d9488'];
+const MAX_FILE_SIZE = 35 * 1024 * 1024; // 35MB
+
+const CreateStoryModal = ({ open, onOpenChange, onStoryCreated }: CreateStoryModalProps) => {
+    const queryClient = useQueryClient()
+
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [mode, setMode] = useState<'media' | 'text'>('text')
-    const [backgroundColor, setBackgroundColor] = useState(bgColors[0]);
+    const [backgroundColor, setBackgroundColor] = useState(BG_COLORS[0]);
     const [text, setText] = useState('')
     const [media, setMedia] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false)
 
-    const handleMediaUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Cleanup preview URL on unmount or when media changes
+    useEffect(() => {
+        return () => {
+            if (previewUrl) {
+                URL.revokeObjectURL(previewUrl);
+            }
+        };
+    }, [previewUrl]);
+
+    // Reset form when modal closes
+    useEffect(() => {
+        if (!open) {
+            resetForm();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [open]);
+
+    const resetForm = useCallback(() => {
+        setText('');
+        setMedia(null);
+        if (previewUrl) {
+            URL.revokeObjectURL(previewUrl);
+        }
+        setPreviewUrl(null);
+        setMode('text');
+        setBackgroundColor(BG_COLORS[0]);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    }, [previewUrl]);
+
+    const handleMediaUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
-        if (file) {
-            setMedia(file)
-            setPreviewUrl(URL.createObjectURL(file) as string)
+        if (!file) return;
+
+        // Validate file type (only images and videos)
+        const isImage = file.type.startsWith('image/')
+        const isVideo = file.type.startsWith('video/')
+
+        if (!isImage && !isVideo) {
+            toast.error('Invalid file type. Please upload an image or video file.')
+            e.target.value = '' // Reset input
+            return;
+        }
+
+        // Validate file size (max 35MB)
+        if (file.size > MAX_FILE_SIZE) {
+            const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+            toast.error(`File size (${sizeMB}MB) exceeds maximum of 35MB.`)
+            e.target.value = '' // Reset input
+            return;
+        }
+
+        // Revoke old preview URL before creating new one
+        if (previewUrl) {
+            URL.revokeObjectURL(previewUrl);
+        }
+
+        setMedia(file)
+        setPreviewUrl(URL.createObjectURL(file))
+    }, [previewUrl])
+
+    const handleRemoveMedia = useCallback(() => {
+        if (previewUrl) {
+            URL.revokeObjectURL(previewUrl);
+        }
+        setMedia(null);
+        setPreviewUrl(null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    }, [previewUrl]);
+
+    const switchToTextMode = useCallback(() => {
+        setMode('text');
+        handleRemoveMedia();
+        setText('');
+    }, [handleRemoveMedia]);
+
+    const switchToMediaMode = useCallback(() => {
+        setMode('media');
+        setText('');
+        fileInputRef.current?.click();
+    }, []);
+
+    const handleCreateStory = async () => {
+        // Validation
+        if (!text.trim() && !media) {
+            toast.error('Please add content or media to your story')
+            return
+        }
+
+        const formData = new FormData();
+
+        if (text.trim()) {
+            formData.append('content', text)
+            formData.append('contentBackground', backgroundColor)
+        }
+
+        if (media) {
+            formData.append('media', media)
+        }
+
+        setLoading(true)
+
+        try {
+            await toast.promise(
+                axiosInstance.post('/auth/stories', formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                }),
+                {
+                    loading: "Creating your story...",
+                    success: "Story created successfully!",
+                    error: (err) => err?.response?.data?.error || "Failed to create story",
+                }
+            )
+
+            // Close modal and reset form
+            onOpenChange(false)
+            resetForm()
+
+            // Callback to refresh stories list
+            onStoryCreated?.()
+            await queryClient.invalidateQueries({ queryKey: ['stories'] })
+        } catch (error) {
+            console.error('Failed to create story:', error)
+        } finally {
+            setLoading(false)
         }
     }
 
-    const handleCreateStory = async () => {
-        
-          toast.promise<{ name: string }>(
-            () =>
-              new Promise((resolve) =>
-                setTimeout(() => resolve({ name: "Event" }), 2000)
-              ),
-            {
-              loading: "Loading...",
-              success: (data) => `${data.name} has been created`,
-              error: "Error",
-            }
-          )
-    
-    }
+    const isMediaMode = mode === 'media';
+    const hasContent = text.trim() || media;
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className=" bg-transparent border-0 text-white shadow-none">
+            <DialogContent className="bg-transparent border-0 text-white shadow-none max-w-md">
                 <DialogHeader>
-                    <div className="flex items-center justify-between">
-                        {/* <Button
-                            variant='ghost'
-                            size="icon"
-                            className='text-white hover:bg-white/10'
-                            onClick={() => onOpenChange(false)}
-                        >
-                            <ArrowLeft />
-                        </Button> */}
-                        <DialogTitle className='text-2xl font-bold text-center flex-1'>Create Story</DialogTitle>
-
-                    </div>
+                    <DialogTitle className='text-2xl font-bold text-center'>
+                        Create Story
+                    </DialogTitle>
                 </DialogHeader>
 
-                {/* Add your modal content here */}
-                <div className="rounded-lg h-96 flex items-center justify-center relative" style={{ backgroundColor }}>
-                    {
-                        mode === 'text' && (
-                            <Textarea
-                                className='bg-transparent text-white w-full h-full p-6 resize-none placeholder:text-white/60 !focus:outline-none border-0'
-                                placeholder='What is on your mind?'
-                                value={text} onChange={(e) => setText(e.target.value)}
-                            />
-                        )
-                    }
-
-                    {
-                        mode === 'media' && previewUrl && (
-                            media?.type.startsWith('image') ? (
-                                <Image src={previewUrl} alt="Preview" fill className="rounded-lg object-contain" />
-                            ) : (
-                                <video src={previewUrl} className="w-full h-full rounded-lg object-contain" controls />
-                            )
-                        )
-                    }
-
-                </div>
-                <div className="flex mt-4 gap-2">
-                    {bgColors.map((color, index) => (
-                        <Button
-                            variant={'ghost'}
-                            key={index}
-                            className={`w-8 h-8 rounded-full cursor-pointer ${backgroundColor === color ? 'ring-1 ring-white' : ''}`}
-                            style={{ backgroundColor: color }}
-                            onClick={() => setBackgroundColor(color)}
+                {/* Story Preview */}
+                <div
+                    className="rounded-lg h-96 flex items-center justify-center relative overflow-hidden"
+                    style={{ backgroundColor }}
+                >
+                    {mode === 'text' && (
+                        <Textarea
+                            className='bg-transparent text-white text-center w-full h-full p-6 resize-none placeholder:text-white/60 focus-visible:outline-none focus-visible:ring-0 border-0'
+                            placeholder='What&apos;s on your mind?'
+                            value={text}
+                            onChange={(e) => setText(e.target.value)}
+                            maxLength={300}
+                            disabled={loading}
                         />
-                    ))}
+                    )}
+
+                    {isMediaMode && previewUrl && (
+                        <>
+                            {media?.type.startsWith('image') ? (
+                                <Image
+                                    src={previewUrl}
+                                    alt="Story preview"
+                                    fill
+                                    className="rounded-lg object-contain"
+                                />
+                            ) : (
+                                <video
+                                    src={previewUrl}
+                                    className="w-full h-full rounded-lg object-contain"
+                                    controls
+                                />
+                            )}
+
+                            {/* Remove media button */}
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 rounded-full"
+                                onClick={handleRemoveMedia}
+                                disabled={loading}
+                            >
+                                <X size={20} className="text-white" />
+                            </Button>
+                        </>
+                    )}
+
+                    {isMediaMode && !previewUrl && (
+                        <div className="flex flex-col items-center gap-3 text-white/60">
+                            <UploadIcon size={48} />
+                            <p className="text-sm">Click below to upload photo or video</p>
+                        </div>
+                    )}
                 </div>
+
+                {/* Background Color Selector (only for text mode) */}
+                {mode === 'text' && (
+                    <div className="flex mt-4 gap-2 items-center">
+                        <span className="text-sm text-white/70 mr-2">Background:</span>
+                        {BG_COLORS.map((color) => (
+                            <Button
+                                variant="ghost"
+                                key={color}
+                                className={`w-8 h-8 p-0 rounded-full transition-all ${backgroundColor === color ? 'ring-2 ring-white scale-110' : 'hover:scale-105'
+                                    }`}
+                                style={{ backgroundColor: color }}
+                                onClick={() => setBackgroundColor(color)}
+                                disabled={loading}
+                            />
+                        ))}
+                    </div>
+                )}
+
+                {/* Mode Selector */}
                 <div className="flex gap-2 mt-4">
-                    <Button className={`flex flex-1 items-center justify-center gap-2 cursor-pointer ${mode === 'text' ? 'bg-white text-black' : ' bg-zinc-800 text-white'}`} onClick={() => { setMode('text'); setMedia(null); setPreviewUrl(null); setText('') }}>
+                    <Button
+                        className={`flex flex-1 items-center justify-center gap-2 transition-all ${mode === 'text'
+                            ? 'bg-white text-black hover:bg-white/90'
+                            : 'bg-zinc-800 text-white hover:bg-zinc-700'
+                            }`}
+                        onClick={switchToTextMode}
+                        disabled={loading}
+                    >
                         <TextIcon size={16} /> Text
                     </Button>
-                    <Button className={`flex flex-1 items-center justify-center gap-2 cursor-pointer ${mode === 'media' ? 'bg-white text-black' : ' bg-zinc-800 text-white'}`} onClick={() => { setMode('media');; setMedia(null); setPreviewUrl(null); setText(''); fileInputRef.current?.click(); }}>
+                    <Button
+                        className={`flex flex-1 items-center justify-center gap-2 transition-all ${mode === 'media'
+                            ? 'bg-white text-black hover:bg-white/90'
+                            : 'bg-zinc-800 text-white hover:bg-zinc-700'
+                            }`}
+                        onClick={switchToMediaMode}
+                        disabled={loading}
+                    >
                         <UploadIcon size={16} /> Photo/Video
                     </Button>
-                    <input ref={fileInputRef} type="file" accept="image/*,video/*" onChange={(e) => { handleMediaUpload(e); setMode('media'); }} className='hidden' />
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*,video/*"
+                        onChange={(e) => {
+                            handleMediaUpload(e);
+                            setMode('media');
+                        }}
+                        className='hidden'
+                        disabled={loading}
+                    />
                 </div>
 
-                <Button onClick={handleCreateStory} className='flex items-center justify-center gap-2 text-white py-3 mt-4 rounded bg-gradient-to-r from-indigo-500 to-purple-600 hove:from-indigo-600 hover:to-purple-700 active:scale-95 transition duration-200 cursor-pointer'>
-                    <Sparkle size={18} />
-                    Create Story
+                {/* Create Story Button */}
+                <Button
+                    onClick={handleCreateStory}
+                    className='flex items-center justify-center gap-2 text-white py-3 mt-4 rounded bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed'
+                    disabled={loading || !hasContent}
+                >
+                    {loading ? (
+                        <>
+                            <Loader className='animate-spin' size={18} />
+                            Creating Story...
+                        </>
+                    ) : (
+                        <>
+                            <Sparkle size={18} />
+                            Create Story
+                        </>
+                    )}
                 </Button>
             </DialogContent>
         </Dialog>

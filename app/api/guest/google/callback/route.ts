@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { hashPassword, setAuthCookie } from '@/lib/auth';
-import { signToken } from '@/lib/jwt';
+import { signTokenEdge } from '@/lib/jwt-edge';
 import { createUser, findUserByEmail, prisma } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
 
 
         // Check if user exists with same email
-        let user = await prisma.user.findUnique({ where: { email: googleUser.email } });
+        let user = await findUserByEmail(googleUser.email);
 
         if (!user) {
             const hashedPassword = await hashPassword('password')
@@ -53,8 +53,8 @@ export async function GET(request: NextRequest) {
             });
         }
 
-        // Generate JWT
-        const token = signToken({
+        // Generate JWT using jose (Edge-compatible)
+        const token = await signTokenEdge({
             userId: user.id,
             email: user.email,
         });

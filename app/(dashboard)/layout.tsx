@@ -74,7 +74,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                     useUserStore.setState({ user: res.data.user })
                 })
                 .catch(err => {
-                    if (err?.response.status == 401) {
+                    if (err?.response?.status === 401) {
                         logOut()
                         router.replace('/login')
                     }
