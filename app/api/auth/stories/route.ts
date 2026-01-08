@@ -1,5 +1,4 @@
-import { Story } from '@/app/generated/prisma/browser';
-import { ConnectionStatus, MessageContentType } from '@/app/generated/prisma/enums';
+import { ConnectionStatus, MessageContentType } from '@prisma/client';
 import { getCurrentUser } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { uploadStories } from '@/lib/supabase-storage-examples';
@@ -187,7 +186,7 @@ export async function GET() {
                         lt: oneDayAgo  // Less than (older stories)
                     },
                     id: {
-                        notIn: stories.map((story: Story) => story.id)  // Fixed syntax
+                        notIn: stories.map((story) => story.id)
                     }
                 },
                 include: {
