@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { hashPassword, setAuthCookie } from '@/lib/auth';
 import { signTokenEdge } from '@/lib/jwt-edge';
-import { createUser, findUserByEmail, prisma } from '@/lib/db';
+import { createUser, findUserByEmail } from '@/lib/db';
+import * as Sentry from '@sentry/nextjs';
 
 export async function GET(request: NextRequest) {
     try {
@@ -65,7 +66,7 @@ export async function GET(request: NextRequest) {
         // Set cookie on the response and return
         return await setAuthCookie(token, response);
     } catch (error) {
-        console.error('Google OAuth error:', error);
+        Sentry.captureException(error);
         return NextResponse.redirect(
             new URL('/login?error=oauth_failed', request.url)
         );

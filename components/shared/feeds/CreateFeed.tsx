@@ -4,11 +4,23 @@ import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 import CreateStoryModal from './CreateStoryModal'
 import { useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import { fullStory } from './StoryCard'
 
 const CreateFeed = () => {
+    const queryClient = useQueryClient()
     const [open, setOpen] = useState(false)
+
     const onOpenChange = () => {
         setOpen(!open)
+    }
+
+    const handleStoryCreated = (newStory: fullStory) => {
+        // Update the cache with the new story
+        queryClient.setQueryData<fullStory[]>(['stories'], (oldData) => {
+            if (!oldData) return [newStory]
+            return [newStory, ...oldData]
+        })
     }
 
     return (
@@ -22,9 +34,13 @@ const CreateFeed = () => {
                 </div>
             </Button>
 
-            <CreateStoryModal open={open} onOpenChange={onOpenChange} /> 
+            <CreateStoryModal
+                open={open}
+                onOpenChange={onOpenChange}
+                onStoryCreated={handleStoryCreated}
+            />
         </>
     )
-}   
+}
 
 export default CreateFeed

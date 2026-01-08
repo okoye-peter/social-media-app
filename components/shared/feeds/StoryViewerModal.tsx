@@ -107,7 +107,7 @@ const StoryViewerModal = ({ open, onOpenChange, story }: { open: boolean; onOpen
                 <div className="h-full bg-white transition-all duration-100 linear" style={{ width: `${progress}%` }}></div>
                 {/* user info */}
                 <div className='absolute top-4 left-4 flex items-center space-x-3 p-2 px-4 sm:p-4 sm:px-8 backdrop-blur-2xl rounded  flex-col gap-2 '>
-                    <Image src={story.user.image as string} alt={story.user.name} width={40} height={40} className='rounded-full ring ring-white' />
+                    <Image src={story.user.image as string} alt={story.user.name} width={40} height={40} className='rounded-full w-10 h-10 ring ring-white' />
                     <div className="text-white font-medium flex items-center gap-1.5 text-sm">
                         <span>{story.user.name}</span>
                         <BadgeCheck size={18} />

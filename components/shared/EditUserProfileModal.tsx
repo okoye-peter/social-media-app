@@ -1,9 +1,9 @@
 "use client"
 
-import { dummyUserData } from '@/public/deleteLater/assets'
 import React, { useState, useRef } from 'react'
 import Image from 'next/image'
-import { Camera } from 'lucide-react'
+import { Camera, Loader2 } from 'lucide-react'
+import { AxiosError } from 'axios'
 import {
     Dialog,
     DialogContent,
@@ -16,28 +16,38 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { User } from '@/types/story'
+import axiosInstance from '@/lib/axios'
+import { useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
+import { useUserStore } from '@/stores'
 
 interface EditUserProfileModalProps {
     open: boolean
-    onOpenChange: (open: boolean) => void
+    onOpenChange: (open: boolean) => void,
+    user: User
 }
 
-const EditUserProfileModal = ({ open, onOpenChange }: EditUserProfileModalProps) => {
-    const user = dummyUserData
+const EditUserProfileModal = ({ open, onOpenChange, user }: EditUserProfileModalProps) => {
+
+    const queryClient = useQueryClient();
 
     const [editForm, setEditForm] = useState({
-        username: user.username,
-        full_name: user.full_name,
-        bio: user.bio,
-        profile_picture: user.profile_picture,
-        location: user.location,
-        cover_photo: user.cover_photo
+        username: user.username || '',
+        name: user.name || '',
+        bio: user.bio || '',
+        image: user.image || `https://ui-avatars.com/api/?color=fff&uppercase=true&name=${user.name || 'User'}&bold=true&background=9333EA`,
+        location: user.location || '',
+        coverImage: user.coverImage || '/cover_photo_default.jpeg'
     })
 
     const [profilePreview, setProfilePreview] = useState<string | null>(null)
+    const [profileImageFile, setProfileImageFile] = useState<File | null>(null)
     const [coverPreview, setCoverPreview] = useState<string | null>(null)
+    const [coverImageFile, setCoverImageFile] = useState<File | null>(null)
     const profileInputRef = useRef<HTMLInputElement>(null)
-    const coverInputRef = useRef<HTMLInputElement>(null)
+    const coverInputRef = useRef<HTMLInputElement>(null);
+    const [isUpdating, setIsUpdating] = useState(false)
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         setEditForm({
@@ -54,6 +64,7 @@ const EditUserProfileModal = ({ open, onOpenChange }: EditUserProfileModalProps)
                 setProfilePreview(reader.result as string)
             }
             reader.readAsDataURL(file)
+            setProfileImageFile(file)
         }
     }
 
@@ -65,24 +76,49 @@ const EditUserProfileModal = ({ open, onOpenChange }: EditUserProfileModalProps)
                 setCoverPreview(reader.result as string)
             }
             reader.readAsDataURL(file)
+            setCoverImageFile(file)
         }
     }
 
-    const handleSave = () => {
+    const handleSave = async () => {
         // TODO: Implement save logic here
-        // console.log('Saving profile:', editForm)
-        onOpenChange(false)
+        const formData = new FormData()
+        formData.append('username', editForm.username)
+        formData.append('name', editForm.name)
+        formData.append('bio', editForm.bio)
+        formData.append('location', editForm.location)
+        if (coverImageFile) formData.append('coverImage', coverImageFile as File)
+        if (profileImageFile) formData.append('image', profileImageFile as File)
+
+
+        setIsUpdating(true)
+        try {
+            const {data} = await axiosInstance.put(`/auth/users`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            })
+            useUserStore.setState({user: data.updatedUser})
+            onOpenChange(false)
+        } catch (error) {
+            const errorMessage = error instanceof AxiosError && error.response?.data?.error
+                ? error.response.data.error
+                : 'Failed to update profile. Please try again.'
+            toast.error(errorMessage)
+        } finally {
+            setIsUpdating(false)
+        }
     }
 
     const handleCancel = () => {
         // Reset form to original values
         setEditForm({
-            username: user.username,
-            full_name: user.full_name,
-            bio: user.bio,
-            profile_picture: user.profile_picture,
-            location: user.location,
-            cover_photo: user.cover_photo
+            username: user.username || '',
+            name: user.name || '',
+            bio: user.bio || '',
+            image: user.image || '',
+            location: user.location || '',
+            coverImage: user.coverImage || ''
         })
         setProfilePreview(null)
         setCoverPreview(null)
@@ -108,13 +144,14 @@ const EditUserProfileModal = ({ open, onOpenChange }: EditUserProfileModalProps)
                         <Label className="text-sm font-medium text-gray-700">Profile Picture</Label>
                         <div className="mt-2 relative w-24 h-24">
                             <Image
-                                src={profilePreview || editForm.profile_picture as string}
+                                src={profilePreview || editForm.image as string}
                                 alt="Profile"
                                 width={96}
                                 height={96}
                                 className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
                             />
                             <button
+                                disabled={isUpdating}
                                 type="button"
                                 onClick={() => profileInputRef.current?.click()}
                                 className="absolute bottom-0 right-0 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full p-2 shadow-lg transition-colors"
@@ -136,13 +173,14 @@ const EditUserProfileModal = ({ open, onOpenChange }: EditUserProfileModalProps)
                         <Label className="text-sm font-medium text-gray-700">Cover Photo</Label>
                         <div className="mt-2 relative w-full max-w-sm">
                             <Image
-                                src={coverPreview || editForm.cover_photo as string}
+                                src={coverPreview || editForm.coverImage as string}
                                 alt="Cover"
                                 width={352}
                                 height={176}
                                 className="w-full h-44 rounded-xl object-cover border-2 border-gray-200"
                             />
                             <button
+                                disabled={isUpdating}
                                 type="button"
                                 onClick={() => coverInputRef.current?.click()}
                                 className="absolute bottom-3 right-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full p-2 shadow-lg transition-colors"
@@ -165,10 +203,11 @@ const EditUserProfileModal = ({ open, onOpenChange }: EditUserProfileModalProps)
                             Name
                         </Label>
                         <Input
+                            disabled={isUpdating}
                             id="full_name"
                             name="full_name"
                             type="text"
-                            value={editForm.full_name}
+                            value={editForm.name}
                             onChange={handleInputChange}
                             className="mt-1"
                             placeholder="Enter your full name"
@@ -181,10 +220,11 @@ const EditUserProfileModal = ({ open, onOpenChange }: EditUserProfileModalProps)
                             Username
                         </Label>
                         <Input
+                        disabled={isUpdating}
                             id="username"
                             name="username"
                             type="text"
-                            value={editForm.username}
+                            value={editForm.username as string || ''}
                             onChange={handleInputChange}
                             className="mt-1"
                             placeholder="Enter your username"
@@ -197,9 +237,10 @@ const EditUserProfileModal = ({ open, onOpenChange }: EditUserProfileModalProps)
                             Bio
                         </Label>
                         <Textarea
+                        disabled={isUpdating}
                             id="bio"
                             name="bio"
-                            value={editForm.bio}
+                            value={editForm.bio as string || ''}
                             onChange={handleInputChange}
                             className="mt-1 resize-none"
                             rows={4}
@@ -213,6 +254,7 @@ const EditUserProfileModal = ({ open, onOpenChange }: EditUserProfileModalProps)
                             Location
                         </Label>
                         <Input
+                        disabled={isUpdating}
                             id="location"
                             name="location"
                             type="text"
@@ -230,14 +272,24 @@ const EditUserProfileModal = ({ open, onOpenChange }: EditUserProfileModalProps)
                         variant="outline"
                         onClick={handleCancel}
                         className="px-6"
+                        disabled={isUpdating}
                     >
                         Cancel
                     </Button>
                     <Button
                         onClick={handleSave}
-                        className="px-6 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white"
+                        className="px-6 bg-linear-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white flex items-center justify-center"
+                        disabled={isUpdating}
                     >
-                        Save Changes
+                        {
+                            isUpdating 
+                            ? 
+                            <>
+                                <Loader2 className='animate-spin'/> Saving...
+                            </>
+                            : 
+                            'Save Changes'
+                        }
                     </Button>
                 </div>
             </DialogContent>

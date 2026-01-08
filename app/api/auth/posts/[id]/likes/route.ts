@@ -1,6 +1,7 @@
 import { getCurrentUser } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import { NextRequest, NextResponse } from "next/server"
+import * as Sentry from '@sentry/nextjs';
 
 
 export const POST = async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
@@ -25,7 +26,7 @@ export const POST = async (req: NextRequest, { params }: { params: Promise<{ id:
 
         if (!post) return NextResponse.json({ error: 'Post not found' }, { status: 404 })
 
-        const like = await prisma.like.findFirst({
+        let like = await prisma.like.findFirst({
             where: {
                 userId: user.id,
                 postId: postId
@@ -42,25 +43,26 @@ export const POST = async (req: NextRequest, { params }: { params: Promise<{ id:
                     postId: postId
                 }
             })
-            action = 'unliked'
+            action = 'unlike'
         } else {
-            await prisma.like.create({
+            like = await prisma.like.create({
                 data: {
                     userId: user.id,
                     postId: postId
                 }
             })
-            action = 'liked'
+            action = 'like'
         }
 
 
         return NextResponse.json({
             message: 'Like toggled successfully',
             action,
+            like
         })
 
     } catch (error) {
-        console.log(error)
+        Sentry.captureException(error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
 }

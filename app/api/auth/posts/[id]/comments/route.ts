@@ -1,15 +1,16 @@
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
+import * as Sentry from '@sentry/nextjs';
 
 // GET /api/auth/posts/[id]/comments - Get comments for a specific post
 export const GET = async (
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) => {
     try {
-        const postId = parseInt(params.id);
-
+        const postId = parseInt((await params).id);
+        console.log('postId', postId)
         if (isNaN(postId)) {
             return NextResponse.json(
                 { error: 'Invalid post ID' },
@@ -52,7 +53,7 @@ export const GET = async (
             comments
         }, { status: 200 });
     } catch (error) {
-        console.error('Comments fetching error:', error);
+        Sentry.captureException(error);
         return NextResponse.json(
             { error: 'Internal server error' },
             { status: 500 }
@@ -63,10 +64,10 @@ export const GET = async (
 // POST /api/auth/posts/[id]/comments - Create a new comment
 export const POST = async (
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) => {
     try {
-        const postId = parseInt(params.id);
+        const postId = parseInt((await params).id);
 
         if (isNaN(postId)) {
             return NextResponse.json(
@@ -130,7 +131,7 @@ export const POST = async (
             comment
         }, { status: 201 });
     } catch (error) {
-        console.error('Comment creation error:', error);
+        Sentry.captureException(error);
         return NextResponse.json(
             { error: 'Internal server error' },
             { status: 500 }

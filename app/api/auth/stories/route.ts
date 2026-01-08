@@ -4,6 +4,7 @@ import { getCurrentUser } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { uploadStories } from '@/lib/supabase-storage-examples';
 import { NextRequest, NextResponse } from 'next/server';
+import * as Sentry from '@sentry/nextjs';
 
 
 export async function POST(request: NextRequest) {
@@ -93,6 +94,16 @@ export async function POST(request: NextRequest) {
                 mediaUrl: uploadData?.url || null,
                 userId: user.id,
                 contextType
+            },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        image: true,
+                        name: true,
+                        username: true
+                    }
+                }
             }
         })
 
@@ -201,7 +212,7 @@ export async function GET() {
             message: 'Stories fetched successfully'
         }, { status: 200 })
     } catch (error) {
-        console.error('Stories fetching error:', error);
+        Sentry.captureException(error);
         return NextResponse.json(
             { error: 'Internal server error' },
             { status: 500 }

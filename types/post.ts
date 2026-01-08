@@ -13,6 +13,14 @@ export interface PostMedia {
     updatedAt: string;
 }
 
+export interface Like {
+    id: number;
+    userId: number;
+    postId: number;
+    createdAt: string;
+    updatedAt: string;
+}
+
 export interface Post {
     id: number;
     userId: number;
@@ -25,6 +33,7 @@ export interface Post {
         comments: number;
         likes: number;
     };
+    likes: Like[];
 }
 
 export interface PostsResponse {

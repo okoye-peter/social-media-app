@@ -10,17 +10,40 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Skeleton } from '@/components/ui/skeleton'
 import Image from 'next/image'
-import { ArrowLeft, BadgeCheck, Heart, MessageCircle, Share2 } from 'lucide-react'
+import { ArrowLeft, BadgeCheck, Heart, MessageCircle, Share2, Loader2, Copy, Check } from 'lucide-react'
 import moment from 'moment'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { displayNumber } from '@/lib/numberDisplay'
+import { useUserStore } from '@/stores'
+import { toast } from 'sonner'
+import {
+    FacebookShareButton,
+    TwitterShareButton,
+    WhatsappShareButton,
+    LinkedinShareButton,
+    FacebookIcon,
+    TwitterIcon,
+    WhatsappIcon,
+    LinkedinIcon,
+} from 'react-share'
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 const PostDetailsPage = () => {
     const params = useParams()
     const router = useRouter()
     const queryClient = useQueryClient()
     const postId = params.id as string
+    const user = useUserStore((state) => state.user)
+
     const [commentContent, setCommentContent] = useState('')
+    const [isLiking, setIsLiking] = useState(false)
+    const [copied, setCopied] = useState(false)
+    const [shareMenuOpen, setShareMenuOpen] = useState(false)
 
     // Fetch post details
     const { data: post, isLoading: postLoading } = useQuery<Post>({
@@ -30,6 +53,24 @@ const PostDetailsPage = () => {
             return res.data.post
         }
     })
+
+    // Reactive state for likes and comments
+    const [likes, setLikes] = useState(post?.likes || [])
+    const [likesCount, setLikesCount] = useState(post?._count.likes || 0)
+    const [commentsCount, setCommentsCount] = useState(post?._count.comments || 0)
+
+    // Update state when post data changes
+    useEffect(() => {
+        if (post) {
+            setLikes(post.likes || [])
+            setLikesCount(post._count.likes || 0)
+            setCommentsCount(post._count.comments || 0)
+        }
+    }, [post])
+
+    const postUrl = typeof window !== 'undefined' ? `${window.location.origin}/posts/${postId}` : ''
+    const shareTitle = post ? `Check out this post by ${post.user.name}` : 'Check out this post'
+    const shareDescription = post?.content || 'Interesting post!'
 
     // Fetch comments
     const { data: commentsData, isLoading: commentsLoading } = useQuery<CommentsResponse>({
@@ -47,7 +88,11 @@ const PostDetailsPage = () => {
             return res.data
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['comments', postId] })
+            queryClient.invalidateQueries({
+                queryKey: ['comments', postId],
+                refetchType: 'active'
+            })
+            setCommentsCount(prev => prev + 1)
             setCommentContent('')
         }
     })
@@ -56,6 +101,36 @@ const PostDetailsPage = () => {
         e.preventDefault()
         if (commentContent.trim()) {
             createCommentMutation.mutate(commentContent)
+        }
+    }
+
+    const handleLikes = async () => {
+        setIsLiking(true)
+        try {
+            const { data } = await axiosInstance.post(`/auth/posts/${postId}/likes`)
+            if (data.action === 'like') {
+                setLikes([...likes, data.like])
+                setLikesCount(prev => prev + 1)
+            } else {
+                setLikes(likes.filter((like) => like.userId !== user?.id))
+                setLikesCount(prev => prev - 1)
+            }
+        } catch (error) {
+            console.log(error)
+            toast.error(`Error ${likes.some((like) => like.userId === user?.id) ? 'unliking' : 'liking'} post`)
+        } finally {
+            setIsLiking(false)
+        }
+    }
+
+    const handleCopyLink = async () => {
+        try {
+            await navigator.clipboard.writeText(postUrl)
+            setCopied(true)
+            toast.success('Link copied to clipboard!')
+            setTimeout(() => setCopied(false), 2000)
+        } catch (error) {
+            toast.error('Failed to copy link')
         }
     }
 
@@ -204,17 +279,56 @@ const PostDetailsPage = () => {
                     )}
                 </CardContent>
                 <CardFooter className="flex items-center gap-4 text-gray-600 text-xs px-3 border-t border-gray-300">
-                    <div className='flex items-center gap-1'>
-                        <Heart className='w-4 h-4' />
-                        <span>{displayNumber(post._count.likes)}</span>
+                    <div className='flex items-center gap-1 cursor-pointer' onClick={handleLikes}>
+                        {isLiking ? <Loader2 className='w-4 h-4 animate-spin' /> : <Heart className={`w-4 h-4 ${likes.some(like => like.userId === user?.id) ? 'text-red-500 fill-red-500' : ''}`} />}
+                        <span>{displayNumber(likesCount)}</span>
                     </div>
                     <div className='flex items-center gap-1'>
                         <MessageCircle className='w-4 h-4' />
-                        <span>{displayNumber(post._count.comments)}</span>
+                        <span>{displayNumber(commentsCount)}</span>
                     </div>
-                    <div className='flex items-center gap-1'>
-                        <Share2 className='w-4 h-4' />
-                    </div>
+                    <DropdownMenu open={shareMenuOpen} onOpenChange={setShareMenuOpen}>
+                        <DropdownMenuTrigger asChild>
+                            <div className='flex items-center gap-1 cursor-pointer'>
+                                <Share2 className='w-4 h-4 cursor-pointer' />
+                            </div>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56">
+                            <div className="p-2">
+                                <p className="text-xs font-medium text-gray-500 mb-2">Share this post</p>
+                                <div className="grid grid-cols-4 gap-2 mb-3">
+                                    <FacebookShareButton url={postUrl} onClick={() => setShareMenuOpen(false)}>
+                                        <div className="flex flex-col items-center gap-1 hover:opacity-80 transition-opacity">
+                                            <FacebookIcon size={32} round />
+                                            <span className="text-[10px] text-gray-600">Facebook</span>
+                                        </div>
+                                    </FacebookShareButton>
+                                    <TwitterShareButton url={postUrl} title={shareTitle} onClick={() => setShareMenuOpen(false)}>
+                                        <div className="flex flex-col items-center gap-1 hover:opacity-80 transition-opacity">
+                                            <TwitterIcon size={32} round />
+                                            <span className="text-[10px] text-gray-600">Twitter</span>
+                                        </div>
+                                    </TwitterShareButton>
+                                    <WhatsappShareButton url={postUrl} title={shareTitle} onClick={() => setShareMenuOpen(false)}>
+                                        <div className="flex flex-col items-center gap-1 hover:opacity-80 transition-opacity">
+                                            <WhatsappIcon size={32} round />
+                                            <span className="text-[10px] text-gray-600">WhatsApp</span>
+                                        </div>
+                                    </WhatsappShareButton>
+                                    <LinkedinShareButton url={postUrl} title={shareTitle} summary={shareDescription} onClick={() => setShareMenuOpen(false)}>
+                                        <div className="flex flex-col items-center gap-1 hover:opacity-80 transition-opacity">
+                                            <LinkedinIcon size={32} round />
+                                            <span className="text-[10px] text-gray-600">LinkedIn</span>
+                                        </div>
+                                    </LinkedinShareButton>
+                                </div>
+                            </div>
+                            <DropdownMenuItem onClick={handleCopyLink} className="cursor-pointer">
+                                {copied ? <Check className="w-4 h-4 mr-2 text-green-500" /> : <Copy className="w-4 h-4 mr-2" />}
+                                {copied ? 'Copied!' : 'Copy link'}
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </CardFooter>
             </Card>
 

@@ -2,6 +2,7 @@ import { MediaType } from "@/app/(dashboard)/posts/create/page";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
+import * as Sentry from '@sentry/nextjs';
 
 
 export const POST = async (request: NextRequest) => {
@@ -48,7 +49,7 @@ export const POST = async (request: NextRequest) => {
             post
         }, { status: 201 });
     } catch (error) {
-        console.error('stories creation error:', error);
+        Sentry.captureException(error);
         return NextResponse.json(
             { error: 'Internal server error' },
             { status: 500 }
@@ -82,6 +83,7 @@ export const GET = async (request: NextRequest) => {
                         image: true,
                     }
                 },
+                likes: true,
                 postMedia: true,
                 _count: {
                     select: {

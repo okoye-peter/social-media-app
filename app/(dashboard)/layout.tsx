@@ -1,6 +1,7 @@
 "use client"
 
-import React, { useEffect } from 'react';
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Home, Search, Settings, LogOut, Users, MessageCircle, CirclePlus } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -67,27 +68,30 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
     const isActive = (url: string) => pathname === url;
 
-    useEffect(() => {
-        const fetchUser = async () => {
-            await axiosInstance.get('/auth/me')
-                .then(res => {
-                    useUserStore.setState({ user: res.data.user })
-                })
-                .catch(err => {
-                    if (err?.response?.status === 401) {
+    const { isLoading } = useQuery({
+        queryKey: ['authUser'],
+        queryFn: async () => {
+            try {
+                const res = await axiosInstance.get('/auth/me')
+                useUserStore.setState({ user: res.data.user })
+                return res.data.user
+            } catch (err: unknown) {
+                if (err && typeof err === 'object' && 'response' in err) {
+                    const error = err as { response?: { status?: number } }
+                    if (error?.response?.status === 401) {
                         logOut()
                         router.replace('/login')
                     }
-                })
-        }
+                }
+                throw err
+            }
+        },
+        enabled: !user, // Only fetch if user is not already in store
+        retry: false, // Don't retry on 401 errors
+        staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    });
 
-        if (!user) {
-            fetchUser()
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [user]);
-
-    if (!user) {
+    if (!user || isLoading) {
         return (
             <SidebarProvider>
                 <Sidebar>

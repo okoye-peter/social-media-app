@@ -7,25 +7,23 @@ import {
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import axiosInstance from '@/lib/axios';
-import { useQueryClient } from '@tanstack/react-query';
 import { Loader, Sparkle, TextIcon, UploadIcon, X } from 'lucide-react';
 import Image from 'next/image';
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner';
-
+import { fullStory } from './StoryCard';
 
 interface CreateStoryModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    onStoryCreated?: () => void;
+    onStoryCreated?: (story: fullStory) => void;
 }
 
 const BG_COLORS = ['#4f46e5', '#7c3aed', '#db2777', '#e11d48', '#ca8a04', '#0d9488'];
 const MAX_FILE_SIZE = 35 * 1024 * 1024; // 35MB
 
-const CreateStoryModal = ({ open, onOpenChange, onStoryCreated }: CreateStoryModalProps) => {
-    const queryClient = useQueryClient()
 
+const CreateStoryModal = ({ open, onOpenChange, onStoryCreated }: CreateStoryModalProps) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [mode, setMode] = useState<'media' | 'text'>('text')
@@ -141,28 +139,26 @@ const CreateStoryModal = ({ open, onOpenChange, onStoryCreated }: CreateStoryMod
         setLoading(true)
 
         try {
-            await toast.promise(
-                axiosInstance.post('/auth/stories', formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data'
-                    }
-                }),
-                {
-                    loading: "Creating your story...",
-                    success: "Story created successfully!",
-                    error: (err) => err?.response?.data?.error || "Failed to create story",
+            // Create the story
+            const response = await axiosInstance.post('/auth/stories', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
                 }
-            )
+            })
+
+            // Show success toast
+            toast.success("Story created successfully!")
+
+            // Call the callback with the new story
+            const newStory = response.data.story
+            onStoryCreated?.(newStory)
 
             // Close modal and reset form
             onOpenChange(false)
             resetForm()
-
-            // Callback to refresh stories list
-            onStoryCreated?.()
-            await queryClient.invalidateQueries({ queryKey: ['stories'] })
         } catch (error) {
             console.error('Failed to create story:', error)
+            toast.error('Failed to create story')
         } finally {
             setLoading(false)
         }
