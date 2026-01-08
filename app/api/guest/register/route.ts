@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { hashPassword, setAuthCookie } from '@/lib/auth';
 import { signTokenEdge } from '@/lib/jwt-edge';
 import { createUser, findUserByEmail } from '@/lib/db';
+import * as Sentry from '@sentry/nextjs';
 
 export async function POST(request: NextRequest) {
     try {
@@ -70,7 +71,7 @@ export async function POST(request: NextRequest) {
         // Set cookie on the response and return
         return await setAuthCookie(token, response);
     } catch (error) {
-        console.error('Registration error:', error);
+        Sentry.captureException(error);
         return NextResponse.json(
             { error: 'Internal server error' },
             { status: 500 }

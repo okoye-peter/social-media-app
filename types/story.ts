@@ -1,19 +1,15 @@
 export interface User {
-    _id: string;
+    id: number;
     email: string;
-    full_name: string;
-    username: string;
-    bio: string;
-    profile_picture: string | { src: string };
-    cover_photo: string | { src: string };
-    location: string;
-    followers: string[];
-    following: string[];
-    connections: string[];
-    posts: string[];
-    is_verified: boolean;
-    createdAt: string;
-    updatedAt: string;
+    name: string;
+    username: string | null;
+    bio: string | null;
+    image: string | null;
+    coverImage: string | null;
+    location: string | null;
+    password?: string; // Optional as it shouldn't be exposed in frontend
+    createdAt: string | Date;
+    updatedAt?: string | Date | null;
 }
 
 export interface Story {

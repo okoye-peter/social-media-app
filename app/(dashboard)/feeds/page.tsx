@@ -34,6 +34,8 @@ const FeedsPage = () => {
                 : undefined
         },
         initialPageParam: 1,
+        refetchOnMount: true,
+        staleTime: 0,
     })
 
     // Intersection Observer for infinite scroll

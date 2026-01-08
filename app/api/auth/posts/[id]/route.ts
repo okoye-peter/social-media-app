@@ -1,13 +1,14 @@
 import { prisma } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
+import * as Sentry from '@sentry/nextjs';
 
 // GET /api/auth/posts/[id] - Get a single post by ID
 export const GET = async (
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) => {
     try {
-        const postId = parseInt(params.id);
+        const postId = parseInt((await params).id);
 
         if (isNaN(postId)) {
             return NextResponse.json(
@@ -27,6 +28,7 @@ export const GET = async (
                         image: true,
                     }
                 },
+                likes: true,
                 postMedia: true,
                 _count: {
                     select: {
@@ -49,7 +51,7 @@ export const GET = async (
             post
         }, { status: 200 });
     } catch (error) {
-        console.error('Post fetching error:', error);
+        Sentry.captureException(error);
         return NextResponse.json(
             { error: 'Internal server error' },
             { status: 500 }

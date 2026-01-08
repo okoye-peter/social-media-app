@@ -9,13 +9,15 @@ import { useQuery } from '@tanstack/react-query'
 
 
 const Stories = () => {
-    
-    const { data:stories, isLoading, error } = useQuery<fullStory[]>({
+
+    const { data: stories, isLoading, error } = useQuery<fullStory[]>({
         queryKey: ['stories'],
         queryFn: async () => {
             const { data } = await axiosInstance.get('/auth/stories')
             return data.stories
-        }
+        },
+        refetchOnMount: true,
+        staleTime: 0,
     })
 
 
