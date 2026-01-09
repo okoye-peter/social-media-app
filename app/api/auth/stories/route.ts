@@ -143,7 +143,7 @@ export async function GET() {
         const connectionIds = followings.map((following) => following.receiverId);
 
         // Get stories from last 24 hours
-        const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        const twoDayAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
 
         const stories = await prisma.story.findMany({
             where: {
@@ -151,7 +151,7 @@ export async function GET() {
                     in: [...connectionIds, user.id]
                 },
                 createdAt: {
-                    gte: oneDayAgo
+                    gte: twoDayAgo
                 }
             },
             include: {
@@ -170,15 +170,12 @@ export async function GET() {
         })
 
         let oldStories;
-        if (stories.length < 8) {
-            // Get OLDER stories (before oneDayAgo) to fill the gap
+        if (stories.length < 8 || !stories) {
+            // Get OLDER stories (before twoDayAgo) to fill the gap
             oldStories = await prisma.story.findMany({
                 where: {
-                    userId: {
-                        in: [...connectionIds, user.id]
-                    },
                     createdAt: {
-                        lt: oneDayAgo  // Less than (older stories)
+                        lt: twoDayAgo  // Less than (older stories)
                     },
                     id: {
                         notIn: stories.map((story) => story.id)

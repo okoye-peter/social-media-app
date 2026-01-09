@@ -59,7 +59,7 @@ export const GET = async (request: NextRequest) => {
             const users = await prisma.user.findMany({
                 where: {
                     id: {
-                        in: followings.map((following: { receiverId: string }) => following.receiverId)
+                        in: followings.map((following: { receiverId: number }) => following.receiverId)
                     }
                 }
             })
@@ -100,7 +100,7 @@ export const GET = async (request: NextRequest) => {
             const users = await prisma.user.findMany({
                 where: {
                     id: {
-                        in: followers.map((follower: { senderId: string }) => follower.senderId)
+                        in: followers.map((follower: { senderId: number }) => follower.senderId)
                     }
                 }
             })

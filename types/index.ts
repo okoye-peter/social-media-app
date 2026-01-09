@@ -1,3 +1,5 @@
+import { Story as PrismaStory, User as PrismaUser } from '@prisma/client';
+
 // ============================================================================
 // CORE USER & AUTH TYPES
 // ============================================================================
@@ -29,6 +31,10 @@ export interface Story {
     background_color: string;
     createdAt: string;
     updatedAt: string;
+}
+
+export type FullStory = PrismaStory & {
+    user: Omit<PrismaUser, 'password'>
 }
 
 // ============================================================================
@@ -363,7 +369,7 @@ export interface DiscoverUserProp {
 export interface CreateStoryModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    onStoryCreated?: (story: any) => void; // Using any temporarily for fullStory
+    onStoryCreated?: (story: FullStory) => void;
 }
 
 // Props for EditUserProfileModal component
