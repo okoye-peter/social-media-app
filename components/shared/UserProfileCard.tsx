@@ -146,7 +146,7 @@ const UserProfileCard = ({ user, onConnectionAccepted }: DiscoverUserProp) => {
 
 
     return (
-        <div className='group relative bg-white rounded-2xl border border-gray-200 hover:border-indigo-300 hover:shadow-2xl transition-all duration-300 overflow-hidden'>
+        <div className='group relative bg-white rounded-2xl border border-gray-200 hover:border-indigo-300 hover:shadow-2xl transition-all duration-300 overflow-hidden flex flex-col h-full'>
             {/* Gradient overlay on hover */}
             <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
@@ -156,7 +156,7 @@ const UserProfileCard = ({ user, onConnectionAccepted }: DiscoverUserProp) => {
                 <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-gradient-to-tr from-purple-400/10 to-pink-400/10 rounded-full blur-3xl" />
             </div>
 
-            <div className='relative p-6 cursor-pointer' onClick={viewProfile}>
+            <div className='relative p-6 cursor-pointer flex-1' onClick={viewProfile}>
                 {/* Avatar section with enhanced effects */}
                 <div className="relative mb-5">
                     {/* Glow effect */}
