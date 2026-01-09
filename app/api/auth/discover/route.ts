@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from '@sentry/nextjs';
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { ConnectionStatus } from "@/app/generated/prisma/enums";
+import { ConnectionStatus } from "@prisma/client";
 
 
 export const GET = async (request: NextRequest) => {
