@@ -5,7 +5,7 @@ import { verifyTokenEdge } from './jwt-edge';
 
 import { prisma } from './db';
 import { AUTH_TOKEN_COOKIE_NAME, AUTH_TOKEN_EXPIRES_IN_DAYS } from '@/constants';
-import { User } from '@/app/generated/prisma/client';
+import { User } from '@prisma/client';
 
 
 

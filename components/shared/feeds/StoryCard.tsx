@@ -6,7 +6,7 @@ import { useState } from 'react'
 
 import moment from 'moment'
 import StoryViewerModal from './StoryViewerModal'
-import { Story, User } from '@/app/generated/prisma/client'
+import { Story, User } from '@prisma/client'
 
 export type fullStory = Story &
 {
