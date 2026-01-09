@@ -11,7 +11,7 @@ import { useUserStore } from '@/stores'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
-import { DiscoveryUser } from '@/app/(dashboard)/discover/page'
+import { DiscoveryUser } from '@/types/pages'
 
 interface DiscoverUserProp {
     user: DiscoveryUser

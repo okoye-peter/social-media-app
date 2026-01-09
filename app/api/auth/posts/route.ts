@@ -1,4 +1,4 @@
-import { MediaType } from "@/app/(dashboard)/posts/create/page";
+import { MediaType } from "@/types/pages";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";

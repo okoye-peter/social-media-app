@@ -5,26 +5,12 @@ import { Input } from '@/components/ui/input'
 import { Search } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { useInfiniteQuery } from '@tanstack/react-query'
-import { User } from '@/types/story'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import axiosInstance from '@/lib/axios'
-import { Connection, Follow } from '@/types/connection'
 
-export type DiscoveryUser = User & {
-    sentConnections?: Connection[]
-    receivedConnections?: Connection[]
-    followers: Follow[]
-}
-interface DiscoverResponse {
-    users: DiscoveryUser[]
-    pagination: {
-        total: number
-        page: number
-        totalPages: number
-        hasMore: boolean
-    }
-}
+import { DiscoveryUser, DiscoverResponse } from '@/types/pages'
+
 
 const DiscoverPage = () => {
     const [searchInput, setSearchInput] = useState('')

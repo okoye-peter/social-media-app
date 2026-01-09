@@ -10,68 +10,9 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Card, CardContent } from '@/components/ui/card'
 import { useUserStore } from '@/stores'
 
-type ConnectionType = 'followers' | 'followings' | 'pending' | 'connections'
+import { ConnectionType, FollowerData, FollowingData, PendingData, ConnectionData, ConnectionAPIResponse } from '@/types/pages'
 
-interface UserData {
-    id: number
-    name: string
-    email: string
-    username: string | null
-    image: string | null
-    coverImage: string | null
-    location: string | null
-    bio: string | null
-    createdAt: string
-}
 
-interface FollowerData {
-    id: number
-    senderId: number
-    receiverId: number
-    sender: UserData
-    createdAt: string
-}
-
-interface FollowingData {
-    id: number
-    senderId: number
-    receiverId: number
-    receiver: UserData
-    createdAt: string
-}
-
-interface PendingData {
-    id: number
-    senderId: number
-    receiverId: number
-    sender: UserData
-    status: string
-    createdAt: string
-}
-
-interface ConnectionData {
-    id: number
-    senderId: number
-    receiverId: number
-    sender: UserData
-    receiver: UserData
-    status: string
-    createdAt: string
-}
-
-interface PaginationData {
-    total: number
-    page: number
-    limit: number
-    totalPages: number
-    hasMore: boolean
-}
-
-interface APIResponse {
-    data: FollowerData[] | FollowingData[] | PendingData[] | ConnectionData[]
-    type: string
-    pagination: PaginationData
-}
 
 const ConnectionsPage = () => {
     const authUser = useUserStore((state) => state.user)
@@ -98,7 +39,7 @@ const ConnectionsPage = () => {
     } = useInfiniteQuery({
         queryKey: ['connections', activeTab],
         queryFn: async ({ pageParam = 1, signal }) => {
-            const response = await axiosInstance.get<APIResponse>(
+            const response = await axiosInstance.get<ConnectionAPIResponse>(
                 `${tabUrls[activeTab]}&page=${pageParam}&limit=12`,
                 { signal }
             )
