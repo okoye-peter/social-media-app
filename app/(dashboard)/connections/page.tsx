@@ -10,7 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Card, CardContent } from '@/components/ui/card'
 import { useUserStore } from '@/stores'
 
-import { ConnectionType, FollowerData, FollowingData, PendingData, ConnectionData, ConnectionAPIResponse } from '@/types/pages'
+import { ConnectionType, FollowerData, FollowingData, PendingData, ConnectionData, ConnectionAPIResponse } from '@/types'
 
 
 

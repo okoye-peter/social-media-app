@@ -79,7 +79,8 @@ export async function GET(request: NextRequest) {
         // Set cookie on the response and return
         return await setAuthCookie(token, response);
     } catch (error) {
-        Sentry.captureException(error);
+        if (process.env.NODE_ENV === 'production') Sentry.captureException(error);
+        console.error(error);
         return NextResponse.redirect(
             new URL('/login?error=oauth_failed', request.url)
         );

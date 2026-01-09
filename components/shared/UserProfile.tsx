@@ -1,7 +1,7 @@
 "use client"
 
 import React from 'react'
-import { User } from '@/types/story'
+import { User } from '@/types'
 import { Calendar, MapPin, PenBox, Verified } from 'lucide-react'
 import Image from 'next/image'
 import { Button } from '../ui/button'

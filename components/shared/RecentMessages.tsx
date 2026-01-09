@@ -2,7 +2,7 @@
 
 import { dummyRecentMessagesData } from '@/public/deleteLater/assets';
 import { useEffect, useState } from 'react'
-import { Message } from '@/types/message';
+import { Message } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -32,7 +32,7 @@ const RecentMessages = () => {
                     {messages.map((message) => (
                         <Link key={message._id} className='flex items-start justify-between  hover:bg-slate-100 p-2 cursor-pointer rounded gap-2' href={`/messages/${message.from_user_id._id}`}>
                             <div className='flex flex-1 items-center gap-2'>
-                                <Image src={message.from_user_id.profile_picture as string} alt="profile" width={30} height={30} className='w-10 h-10 rounded-full' />
+                                <Image src={message.from_user_id.profile_picture || ''} alt="profile" width={30} height={30} className='w-10 h-10 rounded-full' />
                                 <div className='flex-1'>
                                     <div className='flex justify-between items-center flex-1'>
                                         <p className='font-semibold flex-1 text-sm'>{message.from_user_id.full_name}</p>

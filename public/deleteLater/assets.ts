@@ -5,9 +5,7 @@ import bgImage from './bgImage.png'
 import group_users from './group_users.png'
 import { Home, MessageCircle, Search, UserIcon, Users } from 'lucide-react'
 import sponsored_img from './sponsored_img.png'
-import { User } from '@/types/story'
-import { Post } from '@/types/post'
-import { Message, MessageWithUserIds } from '@/types/message'
+import { Message, MessageWithUserIds } from '@/types'
 
 export const assets = {
     logo,
@@ -26,7 +24,7 @@ export const menuItemsData = [
     { to: '/profile', label: 'Profile', Icon: UserIcon },
 ];
 
-export const dummyUserData: User = {
+export const dummyUserData = {
     "_id": "user_2zdFoZib5lNr614LgkONdD8WG32",
     "email": "admin@example.com",
     "full_name": "John Warren",
@@ -124,7 +122,7 @@ export const dummyStoriesData = [
 ]
 
 
-export const dummyPostsData: Post[] = [
+export const dummyPostsData = [
     {
         "_id": "68773e977db16954a783839c",
         "user": dummyUserData,

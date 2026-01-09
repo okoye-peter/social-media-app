@@ -16,27 +16,20 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { User } from '@/types/story'
 import axiosInstance from '@/lib/axios'
-import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { useUserStore } from '@/stores'
-
-interface EditUserProfileModalProps {
-    open: boolean
-    onOpenChange: (open: boolean) => void,
-    user: User
-}
+import { EditUserProfileModalProps } from '@/types'
+import { getAvatarUrl } from '@/lib/utils'
 
 const EditUserProfileModal = ({ open, onOpenChange, user }: EditUserProfileModalProps) => {
 
-    const queryClient = useQueryClient();
 
     const [editForm, setEditForm] = useState({
         username: user.username || '',
         name: user.name || '',
         bio: user.bio || '',
-        image: user.image || `https://ui-avatars.com/api/?color=fff&uppercase=true&name=${user.name || 'User'}&bold=true&background=9333EA`,
+        image: user.image || getAvatarUrl(user.name),
         location: user.location || '',
         coverImage: user.coverImage || '/cover_photo_default.jpeg'
     })
@@ -93,12 +86,12 @@ const EditUserProfileModal = ({ open, onOpenChange, user }: EditUserProfileModal
 
         setIsUpdating(true)
         try {
-            const {data} = await axiosInstance.put(`/auth/users`, formData, {
+            const { data } = await axiosInstance.put(`/auth/users`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
             })
-            useUserStore.setState({user: data.updatedUser})
+            useUserStore.setState({ user: data.updatedUser })
             onOpenChange(false)
         } catch (error) {
             const errorMessage = error instanceof AxiosError && error.response?.data?.error
@@ -220,7 +213,7 @@ const EditUserProfileModal = ({ open, onOpenChange, user }: EditUserProfileModal
                             Username
                         </Label>
                         <Input
-                        disabled={isUpdating}
+                            disabled={isUpdating}
                             id="username"
                             name="username"
                             type="text"
@@ -237,7 +230,7 @@ const EditUserProfileModal = ({ open, onOpenChange, user }: EditUserProfileModal
                             Bio
                         </Label>
                         <Textarea
-                        disabled={isUpdating}
+                            disabled={isUpdating}
                             id="bio"
                             name="bio"
                             value={editForm.bio as string || ''}
@@ -254,7 +247,7 @@ const EditUserProfileModal = ({ open, onOpenChange, user }: EditUserProfileModal
                             Location
                         </Label>
                         <Input
-                        disabled={isUpdating}
+                            disabled={isUpdating}
                             id="location"
                             name="location"
                             type="text"
@@ -282,13 +275,13 @@ const EditUserProfileModal = ({ open, onOpenChange, user }: EditUserProfileModal
                         disabled={isUpdating}
                     >
                         {
-                            isUpdating 
-                            ? 
-                            <>
-                                <Loader2 className='animate-spin'/> Saving...
-                            </>
-                            : 
-                            'Save Changes'
+                            isUpdating
+                                ?
+                                <>
+                                    <Loader2 className='animate-spin' /> Saving...
+                                </>
+                                :
+                                'Save Changes'
                         }
                     </Button>
                 </div>

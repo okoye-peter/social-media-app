@@ -1,22 +1,18 @@
 'use client'
 
 import { useState } from 'react'
-import { Card, CardContent, CardFooter } from '../ui/card'
 import Image from 'next/image'
 import { Button } from '../ui/button'
-import { Check, Loader2, MapPin, UserMinus2, UserPlus, X } from 'lucide-react'
+import { Check, Loader2, MapPin, UserMinus2, UserPlus, X, UserCircle, Calendar } from 'lucide-react'
 import axiosInstance from '@/lib/axios'
-import { ConnectionStatus } from '@/types/connection'
+import { ConnectionStatus } from '@/types'
 import { useUserStore } from '@/stores'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
-import { DiscoveryUser } from '@/types/pages'
+import { DiscoverUserProp } from '@/types'
+import { getAvatarUrl } from '@/lib/utils'
 
-interface DiscoverUserProp {
-    user: DiscoveryUser
-    onConnectionAccepted?: (userId: number) => void
-}
 
 const UserProfileCard = ({ user, onConnectionAccepted }: DiscoverUserProp) => {
     const router = useRouter()
@@ -148,125 +144,204 @@ const UserProfileCard = ({ user, onConnectionAccepted }: DiscoverUserProp) => {
         }
     }
 
-    const defaultImageUrl = `https://ui-avatars.com/api/?color=fff&uppercase=true&name=${user.name || 'User'}&bold=true&background=9333EA`
 
     return (
+        <div className='group relative bg-white rounded-2xl border border-gray-200 hover:border-indigo-300 hover:shadow-2xl transition-all duration-300 overflow-hidden'>
+            {/* Gradient overlay on hover */}
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-        <Card className='gap-2 py-2'>
-            <CardContent className='px-2 pt-6 flex flex-col justify-between cursor-pointer' onClick={viewProfile}>
-                <Image
-                    src={user.image || defaultImageUrl}
-                    alt={user.name}
-                    width={100}
-                    height={100}
-                    className='w-24 h-24 rounded-full mx-auto object-cover'
-                />
-                <p className='font-semibold mt-4 text-center'>{user.name}</p>
-                {user.username && <p className='text-gray-500 font-light text-center mt-2'>@{user.username}</p>}
-                {user.bio && <p className='text-slate-600 mt-2 text-center text-sm px-4 line-clamp-2'>{user.bio}</p>}
-                <div className='justify-center gap-2 flex mt-3 flex-wrap'>
-                    {user.location && (
-                        <div className='flex items-center gap-1 border border-gray-300 rounded-full px-3 py-1 text-xs'>
-                            <MapPin className='w-4 h-4' /> {user.location}
+            {/* Animated background pattern */}
+            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700">
+                <div className="absolute -top-24 -right-24 w-48 h-48 bg-gradient-to-br from-indigo-400/10 to-purple-400/10 rounded-full blur-3xl" />
+                <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-gradient-to-tr from-purple-400/10 to-pink-400/10 rounded-full blur-3xl" />
+            </div>
+
+            <div className='relative p-6 cursor-pointer' onClick={viewProfile}>
+                {/* Avatar section with enhanced effects */}
+                <div className="relative mb-5">
+                    {/* Glow effect */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-28 h-28 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-full opacity-0 group-hover:opacity-30 blur-2xl transition-opacity duration-500" />
+                    </div>
+
+                    {/* Avatar image */}
+                    <div className="relative flex justify-center">
+                        <div className="relative">
+                            <Image
+                                src={user.image || getAvatarUrl(user.name)}
+                                alt={user.name}
+                                width={120}
+                                height={120}
+                                className='w-28 h-28 rounded-full object-cover ring-4 ring-white group-hover:ring-indigo-100 shadow-xl transition-all duration-300 group-hover:scale-105'
+                            />
+                            {/* Online status indicator */}
+                            <div className="absolute bottom-2 right-2 w-4 h-4 bg-green-500 border-2 border-white rounded-full shadow-lg" />
+                        </div>
+                    </div>
+                </div>
+
+                {/* User info section */}
+                <div className="text-center space-y-3">
+                    {/* Name */}
+                    <h3 className='font-bold text-xl text-gray-900 group-hover:text-indigo-700 transition-colors duration-200'>
+                        {user.name}
+                    </h3>
+
+                    {/* Username */}
+                    {user.username && (
+                        <div className="flex items-center justify-center gap-1.5 text-gray-600 group-hover:text-indigo-600 transition-colors">
+                            <UserCircle className='w-4 h-4' />
+                            <span className='text-sm font-medium'>@{user.username}</span>
                         </div>
                     )}
+
+                    {/* Bio */}
+                    {user.bio && (
+                        <p className='text-sm text-gray-600 leading-relaxed line-clamp-2 px-2'>
+                            {user.bio}
+                        </p>
+                    )}
+
+                    {/* Location and Member since */}
+                    <div className='flex flex-wrap items-center justify-center gap-3 pt-2'>
+                        {user.location && (
+                            <div className='inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-full text-xs font-medium text-indigo-700 transition-all duration-200 hover:scale-105'>
+                                <MapPin className='w-3.5 h-3.5' />
+                                <span>{user.location}</span>
+                            </div>
+                        )}
+                        <div className='inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-full text-xs text-gray-600'>
+                            <Calendar className='w-3.5 h-3.5' />
+                            <span>Joined {new Date(user.createdAt).getFullYear()}</span>
+                        </div>
+                    </div>
+
+                    {/* Follower count */}
+                    <div className="flex items-center justify-center gap-4 pt-2 text-sm">
+                        <div className="text-center">
+                            <p className="font-bold text-gray-900">{user.followers.length}</p>
+                            <p className="text-xs text-gray-500">Followers</p>
+                        </div>
+                    </div>
                 </div>
-            </CardContent>
-            <CardFooter className='py-2 px-2 flex gap-2 flex-wrap mt-auto'>
+            </div>
+
+            {/* Action buttons */}
+            <div className='relative px-4 pb-4 flex gap-2 flex-wrap items-center'>
                 {/* Accept or Reject connection sent to you */}
                 {hasPendingConnectionReceived ? (
                     <>
-                        <Button onClick={acceptConnection} disabled={acceptConnectionLoading} variant={'ghost'} className='flex-1 py-2 rounded-md flex items-center justify-center gap-2 bg-linear-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 active:scale-95 transition text-white cursor-pointer text-sm'>
+                        <Button
+                            onClick={acceptConnection}
+                            disabled={acceptConnectionLoading}
+                            className='flex-1 h-11 rounded-xl font-semibold bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl active:scale-95 transition-all duration-200'
+                        >
                             {acceptConnectionLoading ? (
                                 <>
-                                    <Loader2 className='w-4 h-4 animate-spin' /> Accepting...
+                                    <Loader2 className='w-4 h-4 animate-spin mr-2' /> Accepting...
                                 </>
                             ) : (
                                 <>
-                                    <Check className='w-4 h-4' />
+                                    <Check className='w-4 h-4 mr-2' />
                                     Accept
                                 </>
                             )}
                         </Button>
 
-                        <Button onClick={rejectConnection} disabled={rejectConnectionLoading} variant={'ghost'} className='flex-1 py-2 rounded-md flex items-center justify-center gap-2 bg-linear-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 active:scale-95 transition text-white cursor-pointer text-sm'>
+                        <Button
+                            onClick={rejectConnection}
+                            disabled={rejectConnectionLoading}
+                            className='flex-1 h-11 rounded-xl font-semibold bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white shadow-lg hover:shadow-xl active:scale-95 transition-all duration-200'
+                        >
                             {rejectConnectionLoading ? (
                                 <>
-                                    <Loader2 className='w-4 h-4 animate-spin' /> Rejecting...
+                                    <Loader2 className='w-4 h-4 animate-spin mr-2' /> Rejecting...
                                 </>
                             ) : (
                                 <>
-                                    <X className='w-4 h-4' />
+                                    <X className='w-4 h-4 mr-2' />
                                     Reject
                                 </>
                             )}
                         </Button>
                     </>
                 ) : hasPendingConnectionSent ? (
-                    <Button onClick={cancelConnection} disabled={connectionLoading} variant={'ghost'} className='flex-1 py-2 rounded-md flex items-center justify-center gap-2 bg-linear-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 active:scale-95 transition text-white cursor-pointer text-sm'>
+                    <Button
+                        onClick={cancelConnection}
+                        disabled={connectionLoading}
+                        className='flex-1 h-11 rounded-xl font-semibold bg-gradient-to-r from-gray-500 to-slate-600 hover:from-gray-600 hover:to-slate-700 text-white shadow-lg hover:shadow-xl active:scale-95 transition-all duration-200'
+                    >
                         {connectionLoading ? (
                             <>
-                                <Loader2 className='w-4 h-4 animate-spin' /> Cancelling...
+                                <Loader2 className='w-4 h-4 animate-spin mr-2' /> Cancelling...
                             </>
                         ) : (
                             <>
-                                <UserMinus2 className='w-4 h-4' />
+                                <UserMinus2 className='w-4 h-4 mr-2' />
                                 Cancel
                             </>
                         )}
                     </Button>
                 ) : (
-                    <Button onClick={sendConnection} disabled={connectionLoading} variant={'ghost'} className='flex-1 py-2 rounded-md flex items-center justify-center gap-2 bg-linear-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 active:scale-95 transition text-white cursor-pointer text-sm'>
+                    <Button
+                        onClick={sendConnection}
+                        disabled={connectionLoading}
+                        className='flex-1 h-11 rounded-xl font-semibold bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl active:scale-95 transition-all duration-200'
+                    >
                         {connectionLoading ? (
                             <>
-                                <Loader2 className='w-4 h-4 animate-spin' /> Connecting...
+                                <Loader2 className='w-4 h-4 animate-spin mr-2' /> Connecting...
                             </>
                         ) : (
                             <>
-                                <UserPlus className='w-4 h-4' />
+                                <UserPlus className='w-4 h-4 mr-2' />
                                 Connect
                             </>
                         )}
                     </Button>
                 )}
 
+                {/* Follow/Unfollow button */}
+                {isFollowing ? (
+                    <Button
+                        onClick={unfollow}
+                        disabled={unfollowLoading}
+                        className='flex-1 h-11 rounded-xl font-semibold bg-white hover:bg-gray-50 text-gray-700 border-2 border-gray-300 hover:border-gray-400 shadow-md hover:shadow-lg active:scale-95 transition-all duration-200'
+                    >
+                        {unfollowLoading ? (
+                            <>
+                                <Loader2 className='w-4 h-4 animate-spin mr-2' /> Unfollowing...
+                            </>
+                        ) : (
+                            <>
+                                <UserMinus2 className='w-4 h-4 mr-2' />
+                                Unfollow
+                            </>
+                        )}
+                    </Button>
+                ) : (
+                    <Button
+                        onClick={follow}
+                        disabled={followLoading}
+                        className='flex-1 h-11 rounded-xl font-semibold bg-white hover:bg-gray-50 text-indigo-600 border-2 border-indigo-300 hover:border-indigo-400 shadow-md hover:shadow-lg active:scale-95 transition-all duration-200'
+                    >
+                        {followLoading ? (
+                            <>
+                                <Loader2 className='w-4 h-4 animate-spin mr-2' /> Following...
+                            </>
+                        ) : (
+                            <>
+                                <UserPlus className='w-4 h-4 mr-2' />
+                                Follow
+                            </>
+                        )}
+                    </Button>
+                )}
+            </div>
 
-                {
-                    isFollowing ? (
-                        <Button onClick={unfollow} variant={'ghost'} className='flex-1 py-2 rounded-md flex items-center justify-center gap-2 bg-linear-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 active:scale-95 transition text-white cursor-pointer text-sm'>
-                            {
-                                unfollowLoading ? (
-                                    <>
-                                        <Loader2 className='w-4 h-4 animate-spin' /> Unfollowing...
-                                    </>
-                                ) : (
-                                    <>
-                                        <UserMinus2 className='w-4 h-4' />
-                                        Unfollow
-                                    </>
-                                )
-                            }
-                        </Button>
-                    ) : (
-                        <Button onClick={follow} variant={'ghost'} className='flex-1 py-2 rounded-md flex items-center justify-center gap-2 bg-linear-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 active:scale-95 transition text-white cursor-pointer text-sm'>
-                            {
-                                followLoading ? (
-                                    <>
-                                        <Loader2 className='w-4 h-4 animate-spin' /> Following...
-                                    </>
-                                ) : (
-                                    <>
-                                        <UserPlus className='w-4 h-4' />
-                                        Follow
-                                    </>
-                                )
-                            }
-                        </Button>
-                    )
-                }
-            </CardFooter>
-        </Card>
-
+            {/* Bottom accent gradient */}
+            <div className="h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left" />
+        </div>
     )
 }
 
