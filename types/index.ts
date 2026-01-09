@@ -1,4 +1,5 @@
 import { Story as PrismaStory, User as PrismaUser } from '@prisma/client';
+import { StaticImageData } from 'next/image';
 
 // ============================================================================
 // CORE USER & AUTH TYPES
@@ -122,8 +123,8 @@ export interface CommentsResponse {
 
 export interface Message {
     _id: string;
-    from_user_id: User;
-    to_user_id: User;
+    from_user_id: MessageUser;
+    to_user_id: MessageUser;
     text: string;
     message_type: 'text' | 'image' | 'video';
     media_url: string;
@@ -153,8 +154,8 @@ export interface MessageUser {
     full_name?: string;
     username?: string | null;
     bio?: string | null;
-    image?: string | null;
-    profile_picture?: string;
+    image?: string | StaticImageData | null;
+    profile_picture?: string | StaticImageData;
 }
 
 export interface Friend {

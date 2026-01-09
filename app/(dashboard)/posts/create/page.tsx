@@ -250,7 +250,7 @@ const CreatePost = () => {
                 <Card className="max-w-xl mt-6">
                     <CardHeader className="space-y-0 pb-3">
                         <div className='flex items-center gap-3'>
-                            <Image src={user.profile_picture as string} alt="profile" className='w-12 h-12 rounded-full shadow' />
+                            <Image src={user.profile_picture} alt="profile" className='w-12 h-12 rounded-full shadow' />
                             <div>
                                 <h2 className='font-semibold'>{user.full_name}</h2>
                                 <p className="text-sm text-gray-500">@{user.username}</p>
