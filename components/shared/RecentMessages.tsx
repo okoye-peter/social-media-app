@@ -2,7 +2,7 @@
 
 import { dummyRecentMessagesData } from '@/public/deleteLater/assets';
 import { useEffect, useState } from 'react'
-import { Message } from '@/types/message';
+import { Message } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import Image from 'next/image';
 import Link from 'next/link';

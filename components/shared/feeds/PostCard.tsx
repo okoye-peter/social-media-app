@@ -1,6 +1,6 @@
 "use client"
 
-import { Post } from '@/types/post'
+import { Post } from '@/types'
 import {
     Card,
     CardContent,

@@ -131,9 +131,9 @@ export async function GET() {
             )
         }
 
-        const followings = await prisma.follows.findMany({
+        const followings = await prisma.follow.findMany({
             where: {
-                senderId: user.id ,
+                senderId: user.id,
             },
             select: {
                 receiverId: true,
@@ -206,7 +206,8 @@ export async function GET() {
             message: 'Stories fetched successfully'
         }, { status: 200 })
     } catch (error) {
-        Sentry.captureException(error);
+        if (process.env.NODE_ENV === 'production') Sentry.captureException(error);
+        console.error('stories fetching error:', error);
         return NextResponse.json(
             { error: 'Internal server error' },
             { status: 500 }

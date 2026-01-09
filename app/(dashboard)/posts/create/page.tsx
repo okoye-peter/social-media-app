@@ -16,7 +16,7 @@ import React, { useRef, useState, useEffect } from 'react'
 import axiosInstance from '@/lib/axios';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { MediaType, FileWithId } from '@/types/pages'
+import { MediaType, FileWithId } from '@/types'
 
 
 const CreatePost = () => {

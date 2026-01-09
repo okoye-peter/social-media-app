@@ -3,8 +3,8 @@
 import { useParams, useRouter } from 'next/navigation'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import axiosInstance from '@/lib/axios'
-import { Post } from '@/types/post'
-import { CommentsResponse } from '@/types/comment'
+import { Post } from '@/types'
+import { CommentsResponse } from '@/types'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -147,7 +147,7 @@ const PostDetailsPage = () => {
 
     if (postLoading) {
         return (
-            <div className="max-w-4xl mx-auto py-6 px-4">
+            <div className="max-w-[80vw] mx-auto py-6 px-4">
                 <Button variant="ghost" className="mb-4" disabled>
                     <ArrowLeft className="w-4 h-4 mr-2" />
                     Back
@@ -208,7 +208,7 @@ const PostDetailsPage = () => {
     }
 
     return (
-        <div className="max-w-4xl mx-auto py-6 px-4">
+        <div className="max-w-[80vw] mx-auto py-6 px-4">
             {/* Back button */}
             <Button
                 variant="ghost"

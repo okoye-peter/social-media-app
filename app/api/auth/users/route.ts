@@ -62,7 +62,8 @@ export const PUT = async (req: NextRequest) => {
         })
     } catch (error) {
         console.log(error)
-        Sentry.captureException(error);
+        if (process.env.NODE_ENV === 'production') Sentry.captureException(error);
+        console.error(error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
 }

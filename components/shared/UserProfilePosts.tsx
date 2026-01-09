@@ -5,7 +5,7 @@ import PostCard from './feeds/PostCard'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { Skeleton } from '../ui/skeleton'
 import axiosInstance from '@/lib/axios'
-import { PostsResponse } from '@/types/post'
+import { PostsResponse } from '@/types'
 
 const UserProfilePosts = ({ userId, type }: { userId: number, type?: 'likes' | 'media' }) => {
 

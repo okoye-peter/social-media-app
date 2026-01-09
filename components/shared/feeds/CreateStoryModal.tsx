@@ -12,12 +12,7 @@ import Image from 'next/image';
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner';
 import { fullStory } from './StoryCard';
-
-interface CreateStoryModalProps {
-    open: boolean;
-    onOpenChange: (open: boolean) => void;
-    onStoryCreated?: (story: fullStory) => void;
-}
+import { CreateStoryModalProps } from '@/types';
 
 const BG_COLORS = ['#4f46e5', '#7c3aed', '#db2777', '#e11d48', '#ca8a04', '#0d9488'];
 const MAX_FILE_SIZE = 35 * 1024 * 1024; // 35MB

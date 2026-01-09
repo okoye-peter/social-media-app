@@ -125,7 +125,8 @@ export const GET = async (request: NextRequest) => {
             { status: 400 }
         )
     } catch (error) {
-        Sentry.captureException(error);
+        if (process.env.NODE_ENV === 'production') Sentry.captureException(error);
+        console.error(error);
         return NextResponse.json(
             { error: 'Internal server error' },
             { status: 500 }
@@ -181,7 +182,8 @@ export async function POST(request: NextRequest) {
             message: 'Follow created successfully'
         }, { status: 201 })
     } catch (error) {
-        Sentry.captureException(error);
+        if (process.env.NODE_ENV === 'production') Sentry.captureException(error);
+        console.error(error);
         return NextResponse.json(
             { error: 'Internal server error' },
             { status: 500 }
@@ -221,7 +223,8 @@ export const DELETE = async (request: NextRequest) => {
             message: 'Follow deleted successfully'
         }, { status: 200 })
     } catch (error) {
-        Sentry.captureException(error);
+        if (process.env.NODE_ENV === 'production') Sentry.captureException(error);
+        console.error(error);
         return NextResponse.json(
             { error: 'Internal server error' },
             { status: 500 }
