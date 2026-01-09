@@ -1,42 +1,198 @@
-import React from 'react'
+"use client"
+
+import React, { useState, useRef, useEffect } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Users, UserPlus, UserCheck, UserPen } from 'lucide-react'
-import {
-    dummyConnectionsData as connections,
-    dummyFollowersData as followers,
-    dummyFollowingData as followings,
-    dummyPendingConnectionsData as pending
-} from '@/public/deleteLater/assets'
+import { Users, UserPlus, UserCheck, UserPen, Loader2 } from 'lucide-react'
 import ConnectionCard from '@/components/shared/ConnectionCard'
+import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query'
+import axiosInstance from '@/lib/axios'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Card, CardContent } from '@/components/ui/card'
+import { useUserStore } from '@/stores'
+
+type ConnectionType = 'followers' | 'followings' | 'pending' | 'connections'
+
+interface UserData {
+    id: number
+    name: string
+    email: string
+    username: string | null
+    image: string | null
+    coverImage: string | null
+    location: string | null
+    bio: string | null
+    createdAt: string
+}
+
+interface FollowerData {
+    id: number
+    senderId: number
+    receiverId: number
+    sender: UserData
+    createdAt: string
+}
+
+interface FollowingData {
+    id: number
+    senderId: number
+    receiverId: number
+    receiver: UserData
+    createdAt: string
+}
+
+interface PendingData {
+    id: number
+    senderId: number
+    receiverId: number
+    sender: UserData
+    status: string
+    createdAt: string
+}
+
+interface ConnectionData {
+    id: number
+    senderId: number
+    receiverId: number
+    sender: UserData
+    receiver: UserData
+    status: string
+    createdAt: string
+}
+
+interface PaginationData {
+    total: number
+    page: number
+    limit: number
+    totalPages: number
+    hasMore: boolean
+}
+
+interface APIResponse {
+    data: FollowerData[] | FollowingData[] | PendingData[] | ConnectionData[]
+    type: string
+    pagination: PaginationData
+}
 
 const ConnectionsPage = () => {
-    const dataArray = [
-        {
-            value: "followers",
-            data: followers,
-            icons: Users,
-            count: followers.length
-        },
-        {
-            value: "followings",
-            data: followings,
-            icons: UserCheck,
-            count: followings.length
-        },
-        {
-            value: "pending",
-            data: pending,
-            icons: UserPen,
-            count: pending.length
-        },
-        {
-            value: "connections",
-            data: connections,
-            icons: UserPlus,
-            count: connections.length
-        }
-    ]
+    const authUser = useUserStore((state) => state.user)
+    const [activeTab, setActiveTab] = useState<ConnectionType>('followers')
+    const loadMoreRef = useRef<HTMLDivElement>(null)
+    const queryClient = useQueryClient()
 
+    const tabUrls = {
+        followers: '/auth/connections?type=followers',
+        followings: '/auth/connections?type=followings',
+        pending: '/auth/connections?type=pending',
+        connections: '/auth/connections?type=connections'
+    }
+
+    // Fetch connections data with infinite query
+    const {
+        data,
+        isLoading,
+        isError,
+        error,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage
+    } = useInfiniteQuery({
+        queryKey: ['connections', activeTab],
+        queryFn: async ({ pageParam = 1, signal }) => {
+            const response = await axiosInstance.get<APIResponse>(
+                `${tabUrls[activeTab]}&page=${pageParam}&limit=12`,
+                { signal }
+            )
+            return response.data
+        },
+        getNextPageParam: (lastPage) => {
+            return lastPage.pagination.hasMore
+                ? lastPage.pagination.page + 1
+                : undefined
+        },
+        initialPageParam: 1,
+        staleTime: 0,
+        refetchOnMount: true
+    })
+
+    const { data: activityData } = useQuery({
+        queryKey: ['activity'],
+        queryFn: async ({ signal }) => {
+            const response = await axiosInstance.get(`/auth/users/activity`, {
+                signal
+            })
+            return response.data
+        },
+        staleTime: 0,
+        refetchOnMount: true
+    })
+
+    // Intersection Observer for infinite scroll
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                const first = entries[0]
+                if (first.isIntersecting && hasNextPage && !isFetchingNextPage) {
+                    fetchNextPage()
+                }
+            },
+            { threshold: 0.1 }
+        )
+
+        const currentRef = loadMoreRef.current
+        if (currentRef) {
+            observer.observe(currentRef)
+        }
+
+        return () => {
+            if (currentRef) {
+                observer.unobserve(currentRef)
+            }
+        }
+    }, [hasNextPage, isFetchingNextPage, fetchNextPage])
+
+    const handleTabChange = (value: string) => {
+        const newTab = value as ConnectionType
+
+        // Reset the query cache for the new tab to force a fresh fetch
+        queryClient.resetQueries({
+            queryKey: ['connections', newTab],
+            exact: true
+        })
+
+        setActiveTab(newTab)
+    }
+
+    // Process data from all pages
+    const processedData = React.useMemo(() => {
+        if (!data?.pages) return []
+
+        switch (activeTab) {
+            case 'followers': {
+                const allData = data.pages.flatMap(page => page.data as FollowerData[])
+                return allData.map(item => item.sender)
+            }
+            case 'followings': {
+                const allData = data.pages.flatMap(page => page.data as FollowingData[])
+                return allData.map(item => item.receiver)
+            }
+            case 'pending': {
+                const allData = data.pages.flatMap(page => page.data as PendingData[])
+                return allData.map(item => item.sender)
+            }
+            case 'connections': {
+                const allData = data.pages.flatMap(page => page.data as ConnectionData[])
+                return allData.flatMap(item => {
+                    // For connections, return the other user (not the current user)
+                    return [item.sender, item.receiver].filter((connection) => connection.id !== authUser?.id).filter(Boolean)
+                })
+            }
+            default:
+                return []
+        }
+    }, [data, activeTab, authUser])
+
+    // Get total count from first page
+    const totalCount = data?.pages?.[0]?.pagination?.total || 0
 
     return (
         <div className='min-h-screen relative'>
@@ -49,16 +205,16 @@ const ConnectionsPage = () => {
 
                 <div className="mb-8 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6">
                     {
-                        dataArray.map((item) => (
-                            <div key={item.value} className="flex flex-col items-center justify-center gap-1 border h-20 border-gray-200 bg-white shadow rounded-md p-2">
-                                <b className="text-lg sm:text-xl">{item.count}</b>
-                                <p className='text-slate-600 text-xs sm:text-sm capitalize'>{item.value}</p>
+                        activityData && Object.entries(activityData).map(([key, count]) => (
+                            <div key={key} className="flex flex-col items-center justify-center gap-1 border h-20 border-gray-200 bg-white shadow rounded-md p-2">
+                                <b className="text-lg sm:text-xl">{count as number}</b>
+                                <p className='text-slate-600 text-xs sm:text-sm capitalize'>{key}</p>
                             </div>
                         ))
                     }
                 </div>
 
-                <Tabs defaultValue="connections" className="w-full mt-4">
+                <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full mt-4">
                     <TabsList className="w-full grid grid-cols-4 gap-1">
                         <TabsTrigger value="followers" className="text-xs sm:text-sm">
                             <Users className="w-4 h-4 mr-0 sm:mr-2" />
@@ -68,47 +224,86 @@ const ConnectionsPage = () => {
                             <UserCheck className="w-4 h-4 mr-0 sm:mr-2" />
                             <span className="hidden sm:inline">Following</span>
                         </TabsTrigger>
-                        <TabsTrigger value="pending" className="text-xs sm:text-sm">
-                            <UserPen className="w-4 h-4 mr-0 sm:mr-2" />
-                            <span className="hidden sm:inline">Pending</span>
-                        </TabsTrigger>
                         <TabsTrigger value="connections" className="text-xs sm:text-sm">
                             <UserPlus className="w-4 h-4 mr-0 sm:mr-2" />
                             <span className="hidden sm:inline">Connections</span>
                         </TabsTrigger>
+                        <TabsTrigger value="pending" className="text-xs sm:text-sm">
+                            <UserPen className="w-4 h-4 mr-0 sm:mr-2" />
+                            <span className="hidden sm:inline">Pending</span>
+                        </TabsTrigger>
                     </TabsList>
 
-                    <TabsContent value="followers">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {followers.map((user) => (
-                                <ConnectionCard key={user._id} user={user} tag='followers' />
-                            ))}
-                        </div>
-                    </TabsContent>
-                    <TabsContent value="followings">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {followings.map((user) => (
-                                <ConnectionCard key={user._id} user={user} tag='followings' />
-                            ))}
-                        </div>
-                    </TabsContent>
-                    <TabsContent value="pending">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {pending.map((user) => (
-                                <ConnectionCard key={user._id} user={user} tag='pending' />
-                            ))}
-                        </div>
-                    </TabsContent>
-                    <TabsContent value="connections">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {connections.map((user) => (
-                                <ConnectionCard key={user._id} user={user} tag='connections' />
-                            ))}
-                        </div>
+                    {/* Content for all tabs */}
+                    <TabsContent value={activeTab}>
+                        {isLoading ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {Array.from({ length: 6 }).map((_, index) => (
+                                    <ConnectionCardSkeleton key={index} />
+                                ))}
+                            </div>
+                        ) : isError ? (
+                            <div className="text-center py-12">
+                                <p className="text-red-500">
+                                    Error: {error instanceof Error ? error.message : 'Failed to load data'}
+                                </p>
+                            </div>
+                        ) : processedData.length > 0 ? (
+                            <>
+                                <div className="mb-4 text-sm text-slate-600">
+                                    Showing {processedData.length} of {totalCount} {activeTab}
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {processedData.map((user) => (
+                                        <ConnectionCard key={user.id} user={user} tag={activeTab} />
+                                    ))}
+                                </div>
+
+                                {/* Loading indicator and intersection observer trigger */}
+                                <div ref={loadMoreRef} className="flex justify-center py-8">
+                                    {isFetchingNextPage ? (
+                                        <div className="flex items-center gap-2 text-slate-600">
+                                            <Loader2 className="w-5 h-5 animate-spin" />
+                                            <span>Loading more...</span>
+                                        </div>
+                                    ) : hasNextPage ? (
+                                        <div className="text-slate-400 text-sm">Scroll for more</div>
+                                    ) : processedData.length > 0 ? (
+                                        <div className="text-slate-400 text-sm">No more {activeTab} to load</div>
+                                    ) : null}
+                                </div>
+                            </>
+                        ) : (
+                            <div className="text-center py-12">
+                                <p className="text-slate-500">No {activeTab} found</p>
+                            </div>
+                        )}
                     </TabsContent>
                 </Tabs>
             </div>
         </div>
+    )
+}
+
+// Skeleton component for loading state
+const ConnectionCardSkeleton = () => {
+    return (
+        <Card>
+            <CardContent className="p-4">
+                <div className="flex items-start gap-3">
+                    <Skeleton className="w-16 h-16 rounded-full" />
+                    <div className="flex-1 space-y-2">
+                        <Skeleton className="h-5 w-32" />
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-4 w-full" />
+                    </div>
+                </div>
+                <div className="mt-4 flex gap-2">
+                    <Skeleton className="h-9 flex-1" />
+                    <Skeleton className="h-9 w-20" />
+                </div>
+            </CardContent>
+        </Card>
     )
 }
 

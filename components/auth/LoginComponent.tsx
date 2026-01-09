@@ -32,7 +32,7 @@ const LoginComponent = ({ onChangeCard }: { onChangeCard: (card: string) => void
         try {
             setLoading(true)
             // console.log('Sending login request with:', { email: email.substring(0, 3) + '***', password: '***' })
-            const res = await axiosInstance.post('/auth/login', { email, password })
+            const res = await axiosInstance.post('/guest/login', { email, password })
             // console.log('Login response:', res.data)
             setUser(res.data.user) // Save user to store
             toast.success('Login successful')

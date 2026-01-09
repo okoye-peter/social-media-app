@@ -50,6 +50,8 @@ model User {
     sentMessages        Message[]    @relation("SentMessages")
     receivedMessages    Message[]    @relation("ReceivedMessages")
     stories             Story[]
+    followers           Follow[]     @relation("Followers")
+    followings          Follow[]     @relation("Followings")
 
     @@map("users")
 }
@@ -158,4 +160,16 @@ model Story {
     updatedAt         DateTime           @updatedAt
 
     @@map("stories")
+}
+
+model Follow {
+    id         Int      @id @default(autoincrement())
+    senderId   Int
+    sender     User     @relation("Followings", fields: [senderId], references: [id], onDelete: Cascade)
+    receiverId Int
+    receiver   User     @relation("Followers", fields: [receiverId], references: [id], onDelete: Cascade)
+    createdAt  DateTime @default(now())
+
+    @@unique([senderId, receiverId])
+    @@map("follows")
 }
