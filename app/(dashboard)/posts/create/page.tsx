@@ -16,17 +16,8 @@ import React, { useRef, useState, useEffect } from 'react'
 import axiosInstance from '@/lib/axios';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { MediaType, FileWithId } from '@/types/pages'
 
-export type MediaType = {
-    url: string;
-    type: 'image' | 'video';
-    path: string;
-}
-
-type FileWithId = {
-    file: File;
-    id: string;
-}
 
 const CreatePost = () => {
     const router = useRouter()

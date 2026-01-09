@@ -131,21 +131,16 @@ export async function GET() {
             )
         }
 
-        const connections = await prisma.connection.findMany({
+        const followings = await prisma.follows.findMany({
             where: {
-                OR: [
-                    { senderId: user.id },
-                    { receiverId: user.id }
-                ],
-                status: ConnectionStatus.APPROVED
+                senderId: user.id ,
             },
             select: {
-                senderId: true,
                 receiverId: true,
             }
         });
 
-        const connectionIds = connections.map((connection) => connection.senderId === user.id ? connection.receiverId : connection.senderId);
+        const connectionIds = followings.map((following) => following.receiverId);
 
         // Get stories from last 24 hours
         const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);

@@ -163,7 +163,7 @@ const RegisterComponent = ({ onChangeCard }: { onChangeCard: (card: string) => v
         setLoading(true)
 
         try {
-            const {data} = await axiosInstance.post('/auth/register', {
+            const {data} = await axiosInstance.post('/guest/register', {
                 name: formData.name,
                 email: formData.email,
                 password: formData.password,
