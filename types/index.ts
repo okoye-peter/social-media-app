@@ -178,6 +178,28 @@ export interface MessagesAPIResponse {
     };
 }
 
+// Type for real-time chat messages (Pusher/API format)
+export interface ChatMessage {
+    id?: number;
+    _id?: string;
+    senderId: number;
+    receiverId: number;
+    content: string | null;
+    text?: string; // fallback
+    createdAt: string;
+    updatedAt: string;
+    messageMedia: {
+        id: number;
+        url: string;
+        type: string;
+    }[];
+    media_url?: string;
+    message_type?: string;
+    isOptimistic?: boolean;
+    isSending?: boolean;
+}
+
+
 // ============================================================================
 // CONNECTION & FOLLOW TYPES
 // ============================================================================
