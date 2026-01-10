@@ -3,7 +3,8 @@ import Sentry from "@sentry/nextjs"
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { Prisma } from "@prisma/client";
-
+import { inngest } from "@/src/ingest/client";
+import { getPusherChannelName } from "@/lib/utils";
 
 export const GET = async (request: NextRequest) => {
     try {
@@ -215,6 +216,15 @@ export const POST = async (request: NextRequest) => {
                     }
                 },
                 messageMedia: true
+            }
+        });
+
+        // Send event to Inngest for reliable broadcasting (non-blocking)
+        inngest.send({
+            name: 'message/sent',
+            data: {
+                messageId: message.id,
+                channelName: getPusherChannelName(user.id, Number(receiverId))
             }
         });
 

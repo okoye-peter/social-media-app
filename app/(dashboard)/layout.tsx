@@ -30,6 +30,7 @@ import axiosInstance from '@/lib/axios';
 import { useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
+import { DashboardLayoutProps } from '@/types';
 
 const menuItems = [
     { icon: Home, label: 'Feed', url: '/feeds' },
@@ -39,9 +40,6 @@ const menuItems = [
     { icon: Settings, label: 'Profile', url: '/profile' },
 ];
 
-interface DashboardLayoutProps {
-    children: React.ReactNode;
-}
 
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     const pathname = usePathname();
