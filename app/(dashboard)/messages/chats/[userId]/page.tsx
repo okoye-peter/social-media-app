@@ -42,7 +42,7 @@ const ChatPage = ({ params }: { params: Promise<{ userId: string }> }) => {
     const prevScrollHeightRef = useRef<number>(0)
     const prevFirstMessageIdRef = useRef<string | number | null>(null);
     const isUserScrollingRef = useRef(false);
-    const scrollTimeoutRef = useRef<NodeJS.Timeout>();
+    const scrollTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
     const [chatId] = useState(getPusherChannelName(authUser?.id as number, friendId));
 
