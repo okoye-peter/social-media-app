@@ -9,7 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import axiosInstance from '@/lib/axios'
 
-import { DiscoveryUser, DiscoverResponse } from '@/types'
+import { DiscoverResponse } from '@/types'
 
 
 const DiscoverPage = () => {

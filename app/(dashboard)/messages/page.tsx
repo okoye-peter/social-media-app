@@ -2,12 +2,12 @@
 
 import MessageUserCard from '@/components/shared/MessageUserCard'
 import { Input } from '@/components/ui/input'
-import React, { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import axiosInstance from '@/lib/axios'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Loader2 } from 'lucide-react'
-import { Friend, MessagesAPIResponse } from '@/types'
+import { MessagesAPIResponse } from '@/types'
 
 const Messages = () => {
     const [searchQuery, setSearchQuery] = useState('')
@@ -77,7 +77,7 @@ const Messages = () => {
     }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
     // Process data from all pages
-    const allFriends = React.useMemo(() => {
+    const allFriends = useMemo(() => {
         if (!data?.pages) return []
         return data.pages.flatMap(page => page.friends)
     }, [data])
