@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ChevronRight, Upload } from 'lucide-react'
 import { toast } from 'sonner'
-import { deleteFile, uploadFile } from '@/lib/supabase-s3.service'
+import { deleteFile, uploadFile } from '@/lib/cloudinary.service'
 import axiosInstance from '@/lib/axios'
 import { useRouter } from 'next/navigation'
 import { useUserStore } from '@/stores'
@@ -163,15 +163,15 @@ const RegisterComponent = ({ onChangeCard }: { onChangeCard: (card: string) => v
         setLoading(true)
 
         try {
-            const {data} = await axiosInstance.post('/guest/register', {
+            const { data } = await axiosInstance.post('/guest/register', {
                 name: formData.name,
                 email: formData.email,
                 password: formData.password,
                 image: profilePictureUrl
             })
-            
-            useUserStore.setState({user: data.user})
-            
+
+            useUserStore.setState({ user: data.user })
+
             // Mark registration as completed to prevent cleanup
             registrationCompletedRef.current = true
 

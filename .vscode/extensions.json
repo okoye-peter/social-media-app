@@ -2,6 +2,7 @@
     "recommendations": [
         "msjsdiag.vscode-react-native",
         "imgildev.vscode-nestjs-generator",
-        "laravel.vscode-laravel"
+        "laravel.vscode-laravel",
+        "timsexperiments.vscode-tailwindcss"
     ]
 }
