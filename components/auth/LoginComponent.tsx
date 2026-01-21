@@ -52,12 +52,12 @@ const LoginComponent = ({ onChangeCard }: { onChangeCard: (card: string) => void
 
     const handleGoogleLogin = () => {
         // Redirect to Google OAuth - this will redirect the browser to Google's auth page
-        window.location.href = '/api/auth/google'
+        window.location.href = '/api/guest/google'
     }
 
     const handleGithubLogin = () => {
         // Redirect to GitHub OAuth - this will redirect the browser to GitHub's auth page
-        window.location.href = '/api/auth/github'
+        window.location.href = '/api/guest/github'
     }
 
     return (
