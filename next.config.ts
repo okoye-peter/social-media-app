@@ -22,7 +22,7 @@ const nextConfig: NextConfig = {
             },
             {
                 protocol: 'https',
-                hostname: '*.supabase.co', // Use your project specific hostname if needed
+                hostname: 'res.cloudinary.com', // Use your project specific hostname if needed
             },
             {
                 protocol: 'https',

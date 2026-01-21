@@ -1,0 +1,25 @@
+# Dependencies
+node_modules
+
+# Build outputs
+.next
+out
+build
+dist
+
+# Environment files
+.env
+.env.*
+
+# Logs
+*.log
+
+# Database
+prisma/migrations
+
+# OS files
+.DS_Store
+
+# IDE
+.vscode
+.idea

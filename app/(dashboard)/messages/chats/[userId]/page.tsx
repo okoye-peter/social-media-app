@@ -10,7 +10,7 @@ import axiosInstance from '@/lib/axios'
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useUserStore } from '@/stores'
 import ChatUserCard from '@/components/shared/ChatUserCard'
-import { uploadFile, deleteFile, UploadOptions } from '@/lib/supabase-s3.service'
+import { uploadFile, deleteFile, UploadOptions } from '@/lib/cloudinary.service'
 import { toast } from 'sonner'
 import { MediaType, FileWithId, ChatMessage } from '@/types'
 import PusherClient from 'pusher-js';
@@ -346,7 +346,7 @@ const ChatPage = ({ params }: { params: Promise<{ userId: string }> }) => {
             setIsUploading(true);
 
             for (const { file, id } of newFilesWithIds) {
-                await uploadFileToSupabase(file, id);
+                await uploadFileToCloudinary(file, id);
             }
 
             setIsUploading(false);
@@ -354,7 +354,7 @@ const ChatPage = ({ params }: { params: Promise<{ userId: string }> }) => {
         if (e.target) e.target.value = ''
     }, []);
 
-    const uploadFileToSupabase = async (file: File, fileId: string) => {
+    const uploadFileToCloudinary = async (file: File, fileId: string) => {
         try {
             const abortController = new AbortController();
             abortControllersRef.current.set(fileId, abortController);
@@ -426,7 +426,7 @@ const ChatPage = ({ params }: { params: Promise<{ userId: string }> }) => {
                 await deleteFile(mediaToRemove.path);
                 setUploadedMedia(prev => prev.filter((_, i) => i !== index));
             } catch (error) {
-                console.error('Failed to delete file from Supabase:', error);
+                console.error('Failed to delete file from Cloudinary:', error);
             }
         }
     }, [filesWithIds, uploadedMedia]);

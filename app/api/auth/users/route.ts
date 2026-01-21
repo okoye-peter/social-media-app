@@ -1,6 +1,6 @@
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { deleteFile, uploadFile } from "@/lib/supabase-s3.service";
+import { deleteFile, uploadFile } from "@/lib/cloudinary.service";
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from '@sentry/nextjs';
 

@@ -8,7 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { dummyUserData } from '@/public/deleteLater/assets';
-import { uploadFile, deleteFile, UploadOptions } from '@/lib/supabase-s3.service';
+import { uploadFile, deleteFile, UploadOptions } from '@/lib/cloudinary.service';
 
 import { ImageIcon, X, Loader2 } from 'lucide-react';
 import Image from 'next/image';
@@ -56,7 +56,7 @@ const CreatePost = () => {
                 // eslint-disable-next-line react-hooks/exhaustive-deps
                 abortControllersRef.current.forEach(controller => controller.abort());
 
-                // Delete all uploaded files from Supabase
+                // Delete all uploaded files from Cloudinary
                 uploadedMediaRef.current.forEach(async (media) => {
                     try {
                         await deleteFile(media.path);
@@ -108,11 +108,11 @@ const CreatePost = () => {
             // Add to preview state
             setFilesWithIds(prev => [...prev, ...newFilesWithIds]);
 
-            // Upload files to Supabase
+            // Upload files to Cloudinary
             setIsUploading(true);
 
             for (const { file, id } of newFilesWithIds) {
-                await uploadFileToSupabase(file, id);
+                await uploadFileToCloudinary(file, id);
             }
 
             setIsUploading(false);
@@ -124,7 +124,7 @@ const CreatePost = () => {
         }
     };
 
-    const uploadFileToSupabase = async (file: File, fileId: string) => {
+    const uploadFileToCloudinary = async (file: File, fileId: string) => {
         try {
             // Create abort controller for this upload
             const abortController = new AbortController();
@@ -139,7 +139,7 @@ const CreatePost = () => {
                 signal: abortController.signal
             };
 
-            // Upload to Supabase
+            // Upload to Cloudinary
             const result = await uploadFile(file, uploadOptions);
 
             // Add to uploaded media state
@@ -201,13 +201,13 @@ const CreatePost = () => {
         // Remove from preview
         setFilesWithIds(prev => prev.filter((_, i) => i !== index));
 
-        // Delete from Supabase if already uploaded
+        // Delete from Cloudinary if already uploaded
         if (mediaToRemove) {
             try {
                 await deleteFile(mediaToRemove.path);
                 setUploadedMedia(prev => prev.filter((_, i) => i !== index));
             } catch (error) {
-                console.error('Failed to delete file from Supabase:', error);
+                console.error('Failed to delete file from Cloudinary:', error);
             }
         }
     };

@@ -1,7 +1,7 @@
 import { ConnectionStatus, MessageContentType } from '@prisma/client';
 import { getCurrentUser } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import { uploadStories } from '@/lib/supabase-storage-examples';
+import { uploadFile } from '@/lib/cloudinary.service';
 import { NextRequest, NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
 
@@ -57,19 +57,15 @@ export async function POST(request: NextRequest) {
                 )
             }
 
-            // Media story (image or video)
-            const result = await uploadStories(media!)
+            // Media story (image or video) - Upload to Cloudinary
+            const result = await uploadFile(media!, { folder: 'stories' })
 
-            if (!result.success || result.error) {
-                return NextResponse.json(
-                    { error: result.error || 'Failed to upload media' },
-                    { status: 500 }
-                )
-            }
-
-            uploadData = result.data
+            uploadData = {
+                url: result.url,
+                type: result.type
+            };
             // Determine type based on uploaded file type
-            contextType = uploadData!.type === 'image'
+            contextType = result.type === 'image'
                 ? MessageContentType.IMAGE
                 : MessageContentType.VIDEO;
         } else {

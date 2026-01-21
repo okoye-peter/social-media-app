@@ -9,32 +9,29 @@ A modern, full-featured social media application built with Next.js 16, featurin
 ## ✨ Features
 
 - 🔐 **Authentication**
-  - Email/Password authentication with JWT
-  - OAuth integration (Google & GitHub)
-  - Secure session management with HTTP-only cookies
-  
+    - Email/Password authentication with JWT
+    - OAuth integration (Google & GitHub)
+    - Secure session management with HTTP-only cookies
 - 📱 **Social Features**
-  - User profiles with customizable bio, location, and images
-  - Post creation with multiple media support
-  - Stories with 24-hour expiration
-  - Like and comment functionality
-  - User connections/friend requests
-  
+    - User profiles with customizable bio, location, and images
+    - Post creation with multiple media support
+    - Stories with 24-hour expiration
+    - Like and comment functionality
+    - User connections/friend requests
 - 💬 **Real-time Messaging**
-  - Real-time direct messaging with Pusher
-  - Typing indicators
-  - Message media support (images, videos)
-  - Optimistic UI updates for instant feedback
-  - Infinite scroll chat history
-  - File upload with progress tracking
-  - Automatic retry with Inngest background jobs
-  
+    - Real-time direct messaging with Pusher
+    - Typing indicators
+    - Message media support (images, videos)
+    - Optimistic UI updates for instant feedback
+    - Infinite scroll chat history
+    - File upload with progress tracking
+    - Automatic retry with Inngest background jobs
 - 🎨 **Modern UI/UX**
-  - Responsive design for all devices
-  - Toast notifications (Sonner)
-  - Skeleton loading states
-  - Glassmorphism and modern design aesthetics
-  - Dark mode ready
+    - Responsive design for all devices
+    - Toast notifications (Sonner)
+    - Skeleton loading states
+    - Glassmorphism and modern design aesthetics
+    - Dark mode ready
 
 ## 🛠️ Tech Stack
 
@@ -45,7 +42,7 @@ A modern, full-featured social media application built with Next.js 16, featurin
 - **Real-time:** Pusher (WebSocket connections)
 - **Background Jobs:** Inngest (reliable message broadcasting)
 - **State Management:** Zustand + React Query
-- **File Storage:** Supabase S3
+- **File Storage:** Cloudinary
 - **Styling:** Tailwind CSS 4
 - **UI Components:** Radix UI + shadcn/ui
 - **Notifications:** Sonner
@@ -115,14 +112,17 @@ NEXT_PUBLIC_PUSHER_CLUSTER="your-pusher-cluster"
 INNGEST_EVENT_KEY="your-inngest-event-key"
 INNGEST_SIGNING_KEY="your-inngest-signing-key"
 
-# Supabase (Required for file storage)
-NEXT_PUBLIC_SUPABASE_URL="your-supabase-url"
-NEXT_PUBLIC_SUPABASE_ANON_KEY="your-supabase-anon-key"
+# Cloudinary (Required for file storage)
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME="your-cloud-name"
+NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET="your-upload-preset"
+CLOUDINARY_API_KEY="your-api-key"
+CLOUDINARY_API_SECRET="your-api-secret"
 ```
 
 #### Getting OAuth Credentials
 
 **Google OAuth:**
+
 1. Go to [Google Cloud Console](https://console.cloud.google.com/)
 2. Create a new project or select existing one
 3. Enable Google+ API
@@ -130,28 +130,33 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY="your-supabase-anon-key"
 5. Add authorized redirect URI: `http://localhost:3000/api/auth/google/callback`
 
 **GitHub OAuth:**
+
 1. Go to [GitHub Developer Settings](https://github.com/settings/developers)
 2. Click "New OAuth App"
 3. Set Authorization callback URL: `http://localhost:3000/api/auth/github/callback`
 
 **Pusher (Real-time):**
+
 1. Go to [Pusher Dashboard](https://dashboard.pusher.com/)
 2. Create a new Channels app
 3. Copy your app credentials (App ID, Key, Secret, Cluster)
 4. Enable client events for typing indicators
 
 **Inngest (Background Jobs):**
+
 1. Go to [Inngest Dashboard](https://www.inngest.com/)
 2. Create a new project
 3. Copy your Event Key and Signing Key
 4. Deploy your app to enable Inngest functions
 
-**Supabase (File Storage):**
-1. Go to [Supabase Dashboard](https://supabase.com/dashboard)
-2. Create a new project
-3. Go to Storage → Create a new bucket (e.g., "messages")
-4. Set bucket to public or configure RLS policies
-5. Copy your project URL and anon key
+**Cloudinary (File Storage):**
+
+1. Go to [Cloudinary Dashboard](https://cloudinary.com/console)
+2. Create a free account
+3. Go to Settings → Upload → Upload presets
+4. Create an unsigned upload preset with unique filename enabled
+5. Copy your Cloud Name and Upload Preset name
+6. Copy API Key and Secret from Dashboard for server-side operations
 
 ### 4. Set up the database
 
@@ -194,7 +199,7 @@ social-media-app/
 │   ├── db.ts                 # Database client
 │   ├── jwt.ts                # JWT utilities
 │   ├── pusher.ts             # Pusher server instance
-│   └── supabase-s3.service.ts # File upload service
+│   └── cloudinary.service.ts  # File upload service
 ├── src/ingest/                # Inngest functions
 │   ├── client.ts             # Inngest client
 │   └── functions.ts          # Background job functions
@@ -207,6 +212,7 @@ social-media-app/
 ## 🗄️ Database Schema
 
 The app uses Prisma with PostgreSQL and includes models for:
+
 - **Users** - User accounts and profiles
 - **Posts & PostMedia** - Social posts with media attachments
 - **Comments** - Post comments
@@ -221,19 +227,23 @@ View the complete schema in `prisma/schema.prisma`.
 ## 🔄 Real-time Features
 
 ### Pusher Integration
+
 - **Private Channels**: Secure 1-on-1 chat channels
 - **Authentication**: Custom auth endpoint validates channel access
 - **Events**: `new-message`, `user-typing`
 - **Optimistic Updates**: Instant UI feedback before server confirmation
 
 ### Inngest Background Jobs
+
 - **Message Broadcasting**: Reliable Pusher event delivery with 3 retries
 - **Async Processing**: API responds immediately, broadcasting happens in background
 - **Extensible**: Easy to add notifications, analytics, etc.
 
 ### File Upload
-- **Supabase S3**: Scalable file storage
-- **Progress Tracking**: Real-time upload progress
+
+- **Cloudinary**: Scalable cloud-based file storage
+- **Progress Tracking**: Real-time upload progress (client-side)
+- **Auto-detection**: Automatically uses fetch (server) or XMLHttpRequest (client)
 - **Cleanup**: Automatic deletion of orphaned files
 
 ## 🚀 Deployment
@@ -250,6 +260,7 @@ View the complete schema in `prisma/schema.prisma`.
 ### Environment Variables for Production
 
 Update these variables for production:
+
 ```env
 GOOGLE_REDIRECT_URI="https://your-domain.com/api/auth/google/callback"
 GITHUB_REDIRECT_URI="https://your-domain.com/api/auth/github/callback"
@@ -275,6 +286,7 @@ This project is licensed under the MIT License.
 ## 👨‍💻 Author
 
 **Peter Okoye**
+
 - GitHub: [@okoye-peter](https://github.com/okoye-peter)
 
 ## 🙏 Acknowledgments
